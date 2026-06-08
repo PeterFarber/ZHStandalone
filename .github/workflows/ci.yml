@@ -14,8 +14,16 @@ jobs:
       - name: Install build deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential premake5 libgl1-mesa-dev libx11-dev \
-            libxrandr-dev libxi-dev libxcursor-dev libxinerama-dev
+          sudo apt-get install -y build-essential libgl1-mesa-dev libx11-dev \
+            libxrandr-dev libxi-dev libxcursor-dev libxinerama-dev curl
+      - name: Install Premake 5
+        run: |
+          PREMAKE_VERSION=5.0.0-beta8
+          curl -fsSL \
+            "https://github.com/premake/premake-core/releases/download/v${PREMAKE_VERSION}/premake-${PREMAKE_VERSION}-linux.tar.gz" \
+            | tar xz
+          sudo install -m 755 premake5 /usr/local/bin/premake5
+          premake5 --version
       - name: Build game
         run: |
           chmod +x game/scripts/*.sh
@@ -42,15 +50,25 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build (Premake + MinGW if available)
-        shell: bash
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-toolchain make
+      - name: Build game
+        shell: msys2 {0}
         run: |
-          if [[ -x game/build/premake5.exe ]]; then
-            cd game/build && ./premake5.exe gmake
-            cd ../..
-            if command -v mingw32-make >/dev/null; then
-              cd game && mingw32-make config=release_x64 -j
-            else
-              echo "mingw32-make not on PATH — skipping link step"
-            fi
-          fi
+          set -euo pipefail
+          cd game/build
+          ./premake5.exe gmake
+          cd ..
+          mingw32-make config=release_x64 -j"$(nproc)"
+          mkdir -p bin/Release/resources bin/Release/maps
+          cp -a resources/. bin/Release/resources/
+          cp -a maps/. bin/Release/maps/
+      - name: Verify binary
+        shell: pwsh
+        run: |
+          if (-not (Test-Path game/bin/Release/zh_game.exe)) {
+            throw "Missing game/bin/Release/zh_game.exe"
+          }

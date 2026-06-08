@@ -1,0 +1,136 @@
+# Manual release: build Linux + Windows game binaries, publish one GitHub Release.
+# GitHub → Actions → "Release game" → Run workflow (pick branch, enter tag e.g. v0.1.0).
+
+name: Release game
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (e.g. v0.1.0)
+        required: true
+        type: string
+      draft:
+        description: Create as draft release
+        required: false
+        type: boolean
+        default: false
+      prerelease:
+        description: Mark as pre-release
+        required: false
+        type: boolean
+        default: false
+
+env:
+  PREMAKE_VERSION: 5.0.0-beta8
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libgl1-mesa-dev libx11-dev \
+            libxrandr-dev libxi-dev libxcursor-dev libxinerama-dev curl
+
+      - name: Install Premake 5
+        run: |
+          curl -fsSL \
+            "https://github.com/premake/premake-core/releases/download/v${{ env.PREMAKE_VERSION }}/premake-${{ env.PREMAKE_VERSION }}-linux.tar.gz" \
+            | tar xz
+          sudo install -m 755 premake5 /usr/local/bin/premake5
+          premake5 --version
+
+      - name: Build release
+        run: |
+          chmod +x game/scripts/*.sh
+          game/scripts/build.sh
+          cp LICENSE game/bin/Release/LICENSE
+          test -x game/bin/Release/zh_game
+
+      - name: Package tar.gz
+        run: |
+          cd game/bin/Release
+          tar czf ../../../zh_game-linux-x64.tar.gz *
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: zh_game-linux-x64.tar.gz
+          if-no-files-found: error
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-toolchain make
+
+      - name: Build release (Premake + MinGW)
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          cd game/build
+          ./premake5.exe gmake
+          cd ..
+          mingw32-make config=release_x64 -j"$(nproc)"
+          mkdir -p bin/Release/resources bin/Release/maps
+          cp -a resources/. bin/Release/resources/
+          cp -a maps/. bin/Release/maps/
+          cp ../LICENSE bin/Release/LICENSE
+          test -f bin/Release/zh_game.exe
+
+      - name: Package zip
+        shell: pwsh
+        run: |
+          Push-Location game/bin/Release
+          tar -a -cf ../../../zh_game-windows-x64.zip *
+          Pop-Location
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: zh_game-windows-x64.zip
+          if-no-files-found: error
+
+  release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: ${{ inputs.tag }}
+          draft: ${{ inputs.draft }}
+          prerelease: ${{ inputs.prerelease }}
+          generate_release_notes: true
+          files: |
+            dist/zh_game-linux-x64.tar.gz
+            dist/zh_game-windows-x64.zip
+          body: |
+            ## Downloads
+
+            | Platform | File | Run |
+            |----------|------|-----|
+            | **Linux** (x64) | `zh_game-linux-x64.tar.gz` | Extract, then `./zh_game` |
+            | **Windows** (x64) | `zh_game-windows-x64.zip` | Extract, then `zh_game.exe` |
+
+            Each archive includes `resources/`, `maps/`, and `LICENSE` beside the executable.
+
+            Requires **OpenGL 3.3**. On Linux you need X11 (or compatible) display libraries installed.
