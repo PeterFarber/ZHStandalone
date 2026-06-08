@@ -210,7 +210,7 @@ void write_arc(json &obj, MapArc3 const &arc) {
         bg.src = read_rect(b, "src");
         bg.use_src = bg.src.w > 0.f && bg.src.h > 0.f;
     }
-    bg.repeat = b.value("repeat", false);
+    bg.repeat = b.value("repeat", bg.image.has_value());
     return bg;
 }
 

@@ -1,8 +1,10 @@
-// Modular rink art: walls, ice, goals, face-off circles from resources/rink/*.png.
+// Modular rink art: walls, goals, face-off circles from resources/rink/*.png.
+// Play surface uses the map background image (e.g. resources/background.png), not ice.png.
 
 #include "zh/ui/rink_sprites.hpp"
 
 #include "detail/resource_paths.hpp"
+#include "zh/game/constants.hpp"
 #include "zh/game/map_definition.hpp"
 #include "zh/game/map_geometry.hpp"
 #include "zh/game/map_runtime.hpp"
@@ -74,6 +76,30 @@ void draw_tex_stretch(Texture2D const &tex, Rectangle const dest) noexcept {
     }
     Rectangle const src{0.f, 0.f, static_cast<float>(tex.width), static_cast<float>(tex.height)};
     DrawTexturePro(tex, src, dest, Vector2{}, 0.f, WHITE);
+}
+
+// Tile src into dest; each full tile occupies tile_world_w × tile_world_h (partial edges crop src).
+void draw_tiled_texture_region(Texture2D const &tex,
+                               Rectangle const src_full,
+                               Rectangle const dest,
+                               float tile_world_w,
+                               float tile_world_h) noexcept {
+    if (tex.id == 0U || dest.width <= 0.f || dest.height <= 0.f) {
+        return;
+    }
+    if (tile_world_w <= 1e-3f || tile_world_h <= 1e-3f) {
+        return;
+    }
+    for (float y = dest.y; y < dest.y + dest.height - 1e-4f; y += tile_world_h) {
+        float const dh = std::min(tile_world_h, dest.y + dest.height - y);
+        float const src_h = src_full.height * (dh / tile_world_h);
+        for (float x = dest.x; x < dest.x + dest.width - 1e-4f; x += tile_world_w) {
+            float const dw = std::min(tile_world_w, dest.x + dest.width - x);
+            float const src_w = src_full.width * (dw / tile_world_w);
+            draw_tex_pro(tex, Rectangle{src_full.x, src_full.y, src_w, src_h},
+                         Rectangle{x, y, dw, dh});
+        }
+    }
 }
 
 [[nodiscard]] Color parse_css_color(std::string const &text) noexcept {
@@ -215,24 +241,6 @@ void draw_tex_stretch(Texture2D const &tex, Rectangle const dest) noexcept {
     return std::clamp((2.f * cr) / ref, 0.f, 1.f);
 }
 
-void draw_tiled_texture(Rectangle const dest,
-                        Texture2D const &tex,
-                        float world_per_tex) noexcept {
-    if (tex.id == 0U || dest.width <= 0.f || dest.height <= 0.f) {
-        return;
-    }
-    Rectangle const src{0.f, 0.f, static_cast<float>(tex.width), static_cast<float>(tex.height)};
-    float const tile_w = src.width * world_per_tex;
-    float const tile_h = src.height * world_per_tex;
-    for (float y = dest.y; y < dest.y + dest.height; y += tile_h) {
-        float const h = std::min(tile_h, dest.y + dest.height - y);
-        for (float x = dest.x; x < dest.x + dest.width; x += tile_w) {
-            float const w = std::min(tile_w, dest.x + dest.width - x);
-            draw_tex_pro(tex, src, Rectangle{x, y, w, h});
-        }
-    }
-}
-
 struct BackgroundTextureCache {
     std::string path;
     Texture2D tex{};
@@ -243,7 +251,7 @@ BackgroundTextureCache &background_texture_cache() noexcept {
     return cache;
 }
 
-void draw_map_background(MapDefinition const &map, Texture2D const &ice_fallback) noexcept {
+void draw_map_background(MapDefinition const &map) noexcept {
     if (!map.background.has_value()) {
         return;
     }
@@ -271,10 +279,7 @@ void draw_map_background(MapDefinition const &map, Texture2D const &ice_fallback
         cache.path = *bg.image;
     }
     if (cache.tex.id == 0U) {
-        float const wpt = map.world_per_tex > 1e-3f ? map.world_per_tex : kWorldPerTex;
-        if (ice_fallback.id != 0U) {
-            draw_tiled_texture(dest_r, ice_fallback, wpt);
-        } else if (!bg.color.has_value()) {
+        if (!bg.color.has_value()) {
             DrawRectangleRec(dest_r, Color{172, 176, 182, 255});
         }
         return;
@@ -286,14 +291,13 @@ void draw_map_background(MapDefinition const &map, Texture2D const &ice_fallback
         src = Rectangle{bg.src.x, bg.src.y, bg.src.w, bg.src.h};
     }
 
+    float const wpt = map.world_per_tex > 1e-3f ? map.world_per_tex : kWorldPerTex;
+
     if (bg.repeat) {
-        for (float y = dest_r.y; y < dest_r.y + dest_r.height; y += src.height) {
-            float const dh = std::min(src.height, dest_r.y + dest_r.height - y);
-            for (float x = dest_r.x; x < dest_r.x + dest_r.width; x += src.width) {
-                float const dw = std::min(src.width, dest_r.x + dest_r.width - x);
-                draw_tex_pro(cache.tex, src, Rectangle{x, y, dw, dh});
-            }
-        }
+        float const tile_w = kBackgroundTileTexels * wpt;
+        float const aspect = src.height > 1e-3f ? (src.width / src.height) : 1.f;
+        float const tile_h = aspect > 1e-3f ? (tile_w / aspect) : tile_w;
+        draw_tiled_texture_region(cache.tex, src, dest_r, tile_w, tile_h);
         return;
     }
 
@@ -375,25 +379,6 @@ void draw_nine_slice_walls(Texture2D const &walls, Rectangle const dest) noexcep
     draw_src_tiled_x(walls, src_bot, dl + wsl, db - wsb, dr - wsr, wsb);
     draw_src_tiled_y(walls, src_left, dl, dt + wst, db - wsb, wsl);
     draw_src_tiled_y(walls, src_right, dr - wsr, dt + wst, db - wsb, wsr);
-}
-
-void draw_ice_tiled(RinkSpriteSet const &sprites) noexcept {
-    float const tile_w = sprites.ice.id != 0U ? static_cast<float>(sprites.ice.width) * kWorldPerTex
-                                              : kIceTileWorld;
-    float const tile_h = sprites.ice.id != 0U ? static_cast<float>(sprites.ice.height) * kWorldPerTex
-                                              : kIceTileWorld;
-
-    for (float y = rink_min_y(); y < rink_max_y(); y += tile_h) {
-        float const h = std::min(tile_h, rink_max_y() - y);
-        for (float x = rink_min_x(); x < rink_max_x(); x += tile_w) {
-            float const w = std::min(tile_w, rink_max_x() - x);
-            if (sprites.ice.id != 0U) {
-                draw_tex_stretch(sprites.ice, Rectangle{x, y, w, h});
-            } else {
-                DrawRectangleRec(Rectangle{x, y, w, h}, Color{172, 176, 182, 255});
-            }
-        }
-    }
 }
 
 void draw_faceoff_circle(Texture2D const &circle, Vector2 const center, float const diameter) noexcept {
@@ -512,23 +497,9 @@ void draw_goals(RinkSpriteSet const &sprites) noexcept {
 void draw_visual_piece(RinkSpriteSet const &sprites, MapVisualPiece const &piece) noexcept {
     Rectangle const dest{piece.dest.x, piece.dest.y, piece.dest.w, piece.dest.h};
     switch (piece.kind) {
-        case MapVisualKind::IceTile: {
-            Rectangle src{0.f, 0.f, static_cast<float>(sprites.ice.width),
-                          static_cast<float>(sprites.ice.height)};
-            if (piece.use_src) {
-                src = Rectangle{piece.src.x, piece.src.y, piece.src.w, piece.src.h};
-            }
-            float const tile_w = src.width * kWorldPerTex;
-            float const tile_h = src.height * kWorldPerTex;
-            for (float y = dest.y; y < dest.y + dest.height; y += tile_h) {
-                float const h = std::min(tile_h, dest.y + dest.height - y);
-                for (float x = dest.x; x < dest.x + dest.width; x += tile_w) {
-                    float const w = std::min(tile_w, dest.x + dest.width - x);
-                    draw_tex_pro(sprites.ice, src, Rectangle{x, y, w, h});
-                }
-            }
+        case MapVisualKind::IceTile:
+            // Legacy ice tiles — play surface comes from map background, not rink/ice.png.
             break;
-        }
         case MapVisualKind::WallFrame:
             draw_nine_slice_walls(sprites.walls, dest);
             break;
@@ -682,7 +653,7 @@ struct MapLayerEntry {
 
 // Walk MapDefinition visuals/shapes in z-order; fall back to baked layout when map file is empty.
 void draw_map_visuals(RinkSpriteSet const &sprites, MapDefinition const &map) noexcept {
-    draw_map_background(map, sprites.ice);
+    draw_map_background(map);
 
     std::vector<MapLayerEntry> layers;
     layers.reserve(map.visuals.size() + map.shapes.size());
@@ -720,25 +691,21 @@ void draw_map_visuals(RinkSpriteSet const &sprites, MapDefinition const &map) no
 
 }  // namespace
 
-// Load resources/rink/{ice,walls,circle,goal}.png; ready=false if any texture fails.
+// Load resources/rink/{walls,circle,goal}.png; ready=false if any texture fails.
 void load_rink_sprites(RinkSpriteSet &out) noexcept {
     unload_rink_sprites(out);
-    out.ice = try_load("rink/ice.png");
     out.walls = try_load("rink/walls.png");
     out.circle = try_load("rink/circle.png");
     out.goal = try_load("rink/goal.png");
-    out.ready = out.ice.id != 0U && out.walls.id != 0U && out.circle.id != 0U && out.goal.id != 0U;
+    out.ready = out.walls.id != 0U && out.circle.id != 0U && out.goal.id != 0U;
     if (!out.ready) {
-        TraceLog(LOG_WARNING, "[zh] Rink sprites incomplete — expected resources/rink/{ice,walls,circle,goal}.png");
+        TraceLog(LOG_WARNING, "[zh] Rink sprites incomplete — expected resources/rink/{walls,circle,goal}.png");
     } else {
         TraceLog(LOG_INFO, "[zh] Loaded rink sprites from resources/rink/");
     }
 }
 
 void unload_rink_sprites(RinkSpriteSet &sprites) noexcept {
-    if (sprites.ice.id != 0U) {
-        UnloadTexture(sprites.ice);
-    }
     if (sprites.walls.id != 0U) {
         UnloadTexture(sprites.walls);
     }

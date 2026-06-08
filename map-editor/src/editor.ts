@@ -655,6 +655,7 @@ export class MapEditor {
       this.map.background = {
         ...prev,
         image: path,
+        repeat: prev.repeat ?? true,
         dest: prev.dest ?? defaultBackgroundDest(this.map),
       };
       this.setStatus(`Background image loaded (${file.name})`);
@@ -712,7 +713,6 @@ export class MapEditor {
 
   private async loadAssets() {
     const paths: [SheetKey, string][] = [
-      ["ice", "/rink/ice.png"],
       ["walls", "/rink/walls.png"],
       ["circle", "/rink/circle.png"],
       ["goal", "/rink/goal.png"],
@@ -724,14 +724,6 @@ export class MapEditor {
             const img = new Image();
             img.onload = () => {
               this.assets[key] = img;
-              if (key === "ice" && !this.activeSrc.ice) {
-                this.activeSrc.ice = {
-                  x: 0,
-                  y: 0,
-                  w: img.width,
-                  h: img.height,
-                };
-              }
               resolve([key, true]);
             };
             img.onerror = () => resolve([key, false]);
@@ -2536,7 +2528,28 @@ export class MapEditor {
         w: this.backgroundImage.naturalWidth || this.backgroundImage.width,
         h: this.backgroundImage.naturalHeight || this.backgroundImage.height,
       };
-      this.drawTexturedRegion(ctx, this.backgroundImage, src, dest, false, bg.repeat === true);
+      const wpt = this.map.world_per_tex > 0 ? this.map.world_per_tex : 1.75;
+      if (bg.repeat !== false) {
+        const tileW = 48 * wpt;
+        const tileH = src.w > 0 ? tileW * (src.h / src.w) : tileW;
+        for (let y = dest.y; y < dest.y + dest.h; y += tileH) {
+          const dh = Math.min(tileH, dest.y + dest.h - y);
+          const srcH = src.h * (dh / tileH);
+          for (let x = dest.x; x < dest.x + dest.w; x += tileW) {
+            const dw = Math.min(tileW, dest.x + dest.w - x);
+            const srcW = src.w * (dw / tileW);
+            this.blit(
+              ctx,
+              this.backgroundImage,
+              { x: src.x, y: src.y, w: srcW, h: srcH },
+              { x, y, w: dw, h: dh },
+              false,
+            );
+          }
+        }
+      } else {
+        this.drawTexturedRegion(ctx, this.backgroundImage, src, dest, false, false);
+      }
     } else if (bg.image && !this.backgroundImage) {
       ctx.fillStyle = "rgba(255,255,255,0.06)";
       ctx.fillRect(dest.x, dest.y, dest.w, dest.h);
@@ -2663,6 +2676,9 @@ export class MapEditor {
   }
 
   private drawVisual(ctx: CanvasRenderingContext2D, piece: VisualPiece) {
+    if (piece.kind === "ice_tile") {
+      return;
+    }
     const sheet = visualKindSheet(piece.kind);
     const img = this.assets[sheet];
     const r = piece.dest;

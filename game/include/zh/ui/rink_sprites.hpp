@@ -9,12 +9,11 @@
 namespace zh::ui {
 
 struct RinkSpriteSet {
-    Texture2D ice{};
     Texture2D walls{};
     Texture2D circle{};
     Texture2D goal{};
 
-    bool ready{false};  // all four PNGs loaded from resources/rink/
+    bool ready{false};  // walls, circle, and goal PNGs loaded from resources/rink/
 };
 
 void load_rink_sprites(RinkSpriteSet &out) noexcept;

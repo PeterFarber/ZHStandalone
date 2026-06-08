@@ -78,10 +78,9 @@ const toolsPanel = makePanel("Tools", true);
 for (const [title, items] of [
   ["General", [["Select", "select"]]],
   ["Draw", [["Color", "color_shape"]]],
-  [
+    [
     "Visuals",
     [
-      ["Ice", "ice_tile"],
       ["Walls", "wall_frame"],
       ["Circle", "circle_mark"],
       ["Goal art", "goal_sprite"],

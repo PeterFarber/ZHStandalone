@@ -82,6 +82,11 @@ MapDefinition make_baked_default_map() noexcept {
     map.camera_bounds = RectF{min_x - wsl, min_y - wst, (max_x - min_x) + wsl + wsr,
                               (max_y - min_y) + wst + wsb};
 
+    map.background = MapBackground{};
+    map.background->image = "background.png";
+    map.background->repeat = true;
+    map.background->dest = map.camera_bounds;
+
     map.spawns.puck_start = MapPoint{cx, mid};
     map.spawns.puck_faceoff = MapPoint{cx, mid};
     map.spawns.host = MapPoint{min_x + (max_x - min_x) * 0.35f, mid};
@@ -101,12 +106,6 @@ MapDefinition make_baked_default_map() noexcept {
         map.spawns.team_b.skaters[i] =
             MapPoint{max_x - spawn_inset - static_cast<float>(i) * 52.f, lane_y[i]};
     }
-
-    MapVisualPiece ice{};
-    ice.id = "ice_field";
-    ice.kind = MapVisualKind::IceTile;
-    ice.dest = RectF{min_x, min_y, max_x - min_x, max_y - min_y};
-    map.visuals.push_back(ice);
 
     MapVisualPiece walls{};
     walls.id = "wall_frame";

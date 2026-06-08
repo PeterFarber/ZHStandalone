@@ -350,8 +350,8 @@
     }
   ],
   "background": {
-    "image": "maps/backgrounds/background.png",
-    "repeat": false,
+    "image": "background.png",
+    "repeat": true,
     "dest": {
       "x": -380,
       "y": -78.75,

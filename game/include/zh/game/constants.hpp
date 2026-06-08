@@ -55,6 +55,8 @@ inline constexpr float kSkaterDrawRadius = 12.f;
 inline constexpr float kGoalieDrawRadius = 16.f;
 inline constexpr float kSkaterSpriteDrawPx = 32.f;
 inline constexpr float kGoalieSpriteDrawPx = 42.f;
+// One background repeat tile: texture scales into this many world units (smaller = denser repeat).
+inline constexpr float kBackgroundTileTexels = 48.f;
 
 // =============================================================================
 // Skater movement

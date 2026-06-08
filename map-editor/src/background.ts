@@ -39,7 +39,11 @@ export function normalizeBackground(raw: unknown, map: MapFile): MapBackground |
   if (dest) bg.dest = dest;
   const src = readOptionalRect(o.src);
   if (src) bg.src = src;
-  if (o.repeat === true) bg.repeat = true;
+  if (typeof o.repeat === "boolean") {
+    bg.repeat = o.repeat;
+  } else if (bg.image) {
+    bg.repeat = true;
+  }
   if (!bg.color && !bg.image) return null;
   if (!bg.dest) bg.dest = defaultBackgroundDest(map);
   return bg;
