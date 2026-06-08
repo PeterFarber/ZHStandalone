@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  linux-game:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential premake5 libgl1-mesa-dev libx11-dev \
+            libxrandr-dev libxi-dev libxcursor-dev libxinerama-dev
+      - name: Build game
+        run: |
+          chmod +x game/scripts/*.sh
+          game/scripts/build.sh
+      - name: Verify binary
+        run: test -x game/bin/Release/zh_game
+
+  linux-map-editor:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: map-editor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: map-editor/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  windows-game:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build (Premake + MinGW if available)
+        shell: bash
+        run: |
+          if [[ -x game/build/premake5.exe ]]; then
+            cd game/build && ./premake5.exe gmake
+            cd ../..
+            if command -v mingw32-make >/dev/null; then
+              cd game && mingw32-make config=release_x64 -j
+            else
+              echo "mingw32-make not on PATH — skipping link step"
+            fi
+          fi

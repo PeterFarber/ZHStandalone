@@ -1,0 +1,46 @@
+# Line endings: LF in the repo; Git picks sensible checkout behavior per file type.
+# After changing this file, run: git add --renormalize .
+
+* text=auto
+
+# C++ game
+*.cpp text eol=lf
+*.hpp text eol=lf
+*.h text eol=lf
+*.c text eol=lf
+
+# Map editor (TypeScript / web)
+*.ts text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+
+# Data & config
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.lua text eol=lf
+
+# Docs & repo metadata
+*.md text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Shell scripts — LF (Git Bash / CI)
+*.sh text eol=lf
+
+# Windows cmd/batch — CRLF for native shells
+*.bat text eol=crlf
+
+# Binaries (never line-ending normalized)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.mp3 binary
+*.aup3 binary
+*.exe binary
+*.dll binary

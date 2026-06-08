@@ -1,0 +1,23 @@
+---
+name: Bug report
+about: Something broken in the game or map editor
+title: ""
+labels: bug
+---
+
+**Describe the bug**
+
+**To reproduce**
+
+1.
+2.
+
+**Expected behavior**
+
+**Environment**
+
+- OS:
+- Build: `game/scripts/build.bat` or `build.sh`
+- Commit or version:
+
+**Screenshots / logs**

@@ -1,0 +1,362 @@
+{
+  "version": 1,
+  "name": "untitled",
+  "world_per_tex": 1.75,
+  "player_bounds": {
+    "x": -240,
+    "y": 0,
+    "w": 2400,
+    "h": 1080
+  },
+  "camera_bounds": {
+    "x": -380,
+    "y": -78.75,
+    "w": 2680,
+    "h": 1237.5
+  },
+  "goal_west": {
+    "kind": "rect",
+    "rect": {
+      "x": -96,
+      "y": 448,
+      "w": 64,
+      "h": 192
+    },
+    "tag": "Team A goal (west)"
+  },
+  "goal_east": {
+    "kind": "rect",
+    "rect": {
+      "x": 1952,
+      "y": 448,
+      "w": 64,
+      "h": 192
+    },
+    "tag": "Team B goal (east)"
+  },
+  "spawns": {
+    "puck_start": null,
+    "puck_faceoff": {
+      "x": 960,
+      "y": 544
+    },
+    "host": null,
+    "slots": [
+      null,
+      null,
+      null,
+      null
+    ],
+    "team_a": {
+      "goalie": {
+        "x": 64,
+        "y": 544
+      },
+      "skaters": [
+        {
+          "x": 864,
+          "y": 544
+        },
+        {
+          "x": 544,
+          "y": 320
+        },
+        {
+          "x": 224,
+          "y": 544
+        }
+      ]
+    },
+    "team_b": {
+      "goalie": {
+        "x": 1856,
+        "y": 544
+      },
+      "skaters": [
+        {
+          "x": 1056,
+          "y": 544
+        },
+        {
+          "x": 1376,
+          "y": 320
+        },
+        {
+          "x": 1696,
+          "y": 544
+        }
+      ]
+    }
+  },
+  "visuals": [],
+  "shapes": [
+    {
+      "kind": "circle",
+      "x": 960,
+      "y": 544,
+      "radius": 128,
+      "stroke": "#000000",
+      "strokeWidth": 6
+    },
+    {
+      "kind": "rect",
+      "rect": {
+        "x": -224,
+        "y": 0,
+        "w": 2368,
+        "h": 1088
+      },
+      "stroke": "#000000",
+      "strokeWidth": 6,
+      "tag": "Color rect",
+      "cornerRadius": 320,
+      "locked": true
+    },
+    {
+      "kind": "circle",
+      "x": 1696,
+      "y": 224,
+      "radius": 90.50966799187809,
+      "stroke": "#000000",
+      "strokeWidth": 6,
+      "tag": "Color circle"
+    },
+    {
+      "kind": "circle",
+      "x": 224,
+      "y": 224,
+      "radius": 96,
+      "stroke": "#000000",
+      "strokeWidth": 6,
+      "tag": "Color circle"
+    },
+    {
+      "kind": "circle",
+      "x": 224,
+      "y": 864,
+      "radius": 96,
+      "stroke": "#000000",
+      "strokeWidth": 6,
+      "tag": "Color circle"
+    },
+    {
+      "kind": "circle",
+      "x": 1696,
+      "y": 864,
+      "radius": 96,
+      "stroke": "#000000",
+      "strokeWidth": 6,
+      "tag": "Color circle"
+    },
+    {
+      "kind": "circle",
+      "x": 960,
+      "y": 544,
+      "radius": 32,
+      "stroke": "#af0e0e",
+      "strokeWidth": 8,
+      "tag": "Color circle"
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": -32,
+        "y": 448
+      },
+      "p2": {
+        "x": -96,
+        "y": 448
+      },
+      "stroke": "#0033ff",
+      "strokeWidth": 6,
+      "tag": "Color line"
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": -96,
+        "y": 448
+      },
+      "p2": {
+        "x": -96,
+        "y": 640
+      },
+      "stroke": "#0033ff",
+      "strokeWidth": 6,
+      "tag": "Color line"
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": -96,
+        "y": 640
+      },
+      "p2": {
+        "x": -32,
+        "y": 640
+      },
+      "stroke": "#0033ff",
+      "strokeWidth": 6,
+      "tag": "Color line"
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": 1952,
+        "y": 448
+      },
+      "p2": {
+        "x": 2016,
+        "y": 448
+      },
+      "stroke": "#ff0000",
+      "strokeWidth": 6,
+      "tag": "Color line"
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": 2016,
+        "y": 448
+      },
+      "p2": {
+        "x": 2016,
+        "y": 640
+      },
+      "stroke": "#ff0000",
+      "strokeWidth": 6,
+      "tag": "Color line"
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": 2016,
+        "y": 640
+      },
+      "p2": {
+        "x": 1952,
+        "y": 640
+      },
+      "stroke": "#ff0000",
+      "strokeWidth": 6,
+      "tag": "Color line"
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": 960,
+        "y": 0
+      },
+      "p2": {
+        "x": 960,
+        "y": 416
+      },
+      "tag": "Color line",
+      "stroke": "#030303",
+      "strokeWidth": 6
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": 960,
+        "y": 672
+      },
+      "p2": {
+        "x": 960,
+        "y": 1088
+      },
+      "tag": "Color line",
+      "stroke": "#030303",
+      "strokeWidth": 6
+    }
+  ],
+  "colliders": [
+    {
+      "kind": "line",
+      "p1": {
+        "x": -32,
+        "y": 448
+      },
+      "p2": {
+        "x": -96,
+        "y": 448
+      }
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": -96,
+        "y": 640
+      },
+      "p2": {
+        "x": -96,
+        "y": 448
+      }
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": -96,
+        "y": 640
+      },
+      "p2": {
+        "x": -32,
+        "y": 640
+      }
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": 1952,
+        "y": 448
+      },
+      "p2": {
+        "x": 2016,
+        "y": 448
+      }
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": 2016,
+        "y": 448
+      },
+      "p2": {
+        "x": 2016,
+        "y": 640
+      }
+    },
+    {
+      "kind": "line",
+      "p1": {
+        "x": 2016,
+        "y": 640
+      },
+      "p2": {
+        "x": 1952,
+        "y": 640
+      }
+    },
+    {
+      "kind": "rect",
+      "rect": {
+        "x": -224,
+        "y": 0,
+        "w": 2368,
+        "h": 1088
+      },
+      "cornerRadius": 320,
+      "locked": true
+    }
+  ],
+  "background": {
+    "image": "maps/backgrounds/background.png",
+    "repeat": false,
+    "dest": {
+      "x": -380,
+      "y": -78.75,
+      "w": 2680,
+      "h": 1237.5
+    }
+  }
+}

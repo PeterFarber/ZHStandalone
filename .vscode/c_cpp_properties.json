@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "name": "game (w64devkit gcc)",
+      "compileCommands": "${workspaceFolder}/game/compile_commands.json",
+      "compilerPath": "${env:USERPROFILE}/Documents/CPP/w64devkit/bin/g++.exe",
+      "cStandard": "c17",
+      "cppStandard": "c++20",
+      "intelliSenseMode": "windows-gcc-x64",
+      "includePath": [
+        "${workspaceFolder}/game/include",
+        "${workspaceFolder}/game/src",
+        "${workspaceFolder}/game/build/external/raylib-master/src",
+        "${workspaceFolder}/game/build/external/enet/include",
+        "${workspaceFolder}/game/build/external/nlohmann/include"
+      ],
+      "defines": [
+        "DEBUG",
+        "PLATFORM_DESKTOP",
+        "GRAPHICS_API_OPENGL_33",
+        "_WIN32"
+      ]
+    }
+  ],
+  "version": 4
+}

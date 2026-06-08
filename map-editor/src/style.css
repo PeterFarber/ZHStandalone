@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+@layer components {
+  .me-btn {
+    @apply inline-flex items-center justify-center rounded-md border border-slate-600/90
+      bg-slate-800/70 px-2.5 py-1.5 text-xs font-medium text-slate-300
+      transition-colors hover:border-slate-500 hover:bg-slate-700 hover:text-slate-100
+      disabled:cursor-not-allowed disabled:opacity-35;
+  }
+
+  .me-btn--block {
+    @apply w-full justify-start text-left;
+  }
+
+  .me-btn--active {
+    @apply border-sky-400 bg-sky-600 text-white shadow-md shadow-sky-950/40
+      ring-2 ring-sky-400/35 hover:border-sky-300 hover:bg-sky-500 hover:text-white;
+  }
+
+  .me-btn--danger {
+    @apply border-red-800/80 bg-red-950/60 text-red-200 hover:border-red-700 hover:bg-red-900/50
+      hover:text-red-100;
+  }
+
+  .me-btn--danger.me-btn--active {
+    @apply border-red-500 bg-red-700 text-white ring-red-400/30 hover:bg-red-600;
+  }
+
+  .me-btn--locked {
+    @apply border-amber-700/70 text-amber-100/90;
+  }
+
+  .me-btn--locked.me-btn--active {
+    @apply border-amber-400 bg-amber-700/80 text-white ring-amber-400/30;
+  }
+}

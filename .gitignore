@@ -1,0 +1,63 @@
+/cmake-build/
+
+# Local toolchains (outside repo — see Documents/CPP)
+/w64devkit/
+/external/
+
+# Game — Premake + MinGW artifacts
+/game/bin/
+/game/obj/
+/game/Makefile
+/game/*.make
+/game/compile_commands.json
+
+# MSVC / CMake droppings anywhere
+/.vs/
+/CMakeFiles/
+CMakeCache.txt
+CMakeUserPresets.json
+CMakeConfigureLog.yaml
+cmake_install.cmake
+compile_commands.json
+*.user
+*.suo
+*.VC.db*
+
+# Fetched raylib + enet (large)
+/game/build/external/
+
+# CMake experiments under game/build/
+/game/build/CMakeFiles/
+/game/build/CMakeCache.txt
+/game/build/cmake_install.cmake
+/game/build/*.sln
+/game/build/*.vcxproj*
+/game/build/x64/
+/game/build/Release/
+/game/build/Debug/
+/game/build/vcpkg_installed/
+/game/build/*.dir/
+/game/build/.cache/
+
+# Legacy root build outputs (if regenerated before cleanup)
+/bin/
+/obj/
+/Makefile
+*.make
+
+# Editor / IDE
+/.cache/
+/game/.cache/
+
+# Map editor
+/map-editor/node_modules/
+/map-editor/dist/
+
+# Private notes (local only — not published)
+/docs/internal/
+/AGENTS.md
+
+# OS / local
+.DS_Store
+Thumbs.db
+settings.json
