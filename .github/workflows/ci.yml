@@ -66,6 +66,10 @@ jobs:
           mkdir -p bin/Release/resources bin/Release/maps
           cp -a resources/. bin/Release/resources/
           cp -a maps/. bin/Release/maps/
+          if objdump -p bin/Release/zh_game.exe | grep -Eiq 'libgcc_s_seh|libstdc\+\+-6|libwinpthread'; then
+            echo "error: zh_game.exe still depends on MinGW runtime DLLs" >&2
+            exit 1
+          fi
       - name: Verify binary
         shell: pwsh
         run: |

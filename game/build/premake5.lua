@@ -225,8 +225,15 @@ if (downloadRaylib) then
         filter "action:vs*"
             debugdir "$(SolutionDir)"
 
-        filter {"action:gmake*"} -- Uncoment if you need to force StaticLib
---          buildoptions { "-static" }
+        filter {"action:gmake*"}
+            -- Static libgcc/libstdc++ (and pthread) so Release zips run without MSYS2/MinGW on PATH.
+            linkoptions {
+                "-static-libgcc",
+                "-static-libstdc++",
+                "-Wl,-Bstatic",
+                "-lpthread",
+                "-Wl,-Bdynamic",
+            }
         filter{}
 
         vpaths 

@@ -89,6 +89,11 @@ jobs:
           cp -a maps/. bin/Release/maps/
           cp ../LICENSE bin/Release/LICENSE
           test -f bin/Release/zh_game.exe
+          if objdump -p bin/Release/zh_game.exe | grep -Eiq 'libgcc_s_seh|libstdc\+\+-6|libwinpthread'; then
+            echo "error: zh_game.exe still depends on MinGW runtime DLLs" >&2
+            objdump -p bin/Release/zh_game.exe | grep -Ei 'libgcc_s_seh|libstdc\+\+-6|libwinpthread' >&2
+            exit 1
+          fi
 
       - name: Package zip
         shell: pwsh
