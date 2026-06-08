@@ -52,6 +52,7 @@ private:
     float shoot_charge_ticks_{0.f};
     bool lmb_was_held_{false};
     std::uint32_t steal_cd_ticks_{0};
+    std::uint32_t shoot_cd_ticks_{0};
     std::uint32_t pickup_block_ticks_{0};
     float cd_tick_frac_accum_{0.f};
 };

@@ -172,6 +172,8 @@ inline constexpr float kMatchSlapImpulse = 420.f;
 inline constexpr float kMatchStealNudge = 105.f;
 inline constexpr float kMatchStealDamp = 0.82f;
 inline constexpr std::uint32_t kPuckStealCooldownTicks = 6U;       // 0.1 s @ 60 Hz
+// After a successful steal, delay before LMB can charge or release a shot.
+inline constexpr std::uint32_t kShootAfterStealBlockTicks = 6U;   // 0.1 s @ 60 Hz
 // Shooter cannot overlap-pickup their own loose puck immediately after release.
 inline constexpr std::uint32_t kPuckSelfPickupBlockTicks = 6U;     // 0.1 s @ 60 Hz
 

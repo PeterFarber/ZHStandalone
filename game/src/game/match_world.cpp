@@ -307,7 +307,9 @@ bool try_steal_carried_puck(std::int8_t &puck_carrier,
                             float const carrier_py,
                             float const blade_puck_x,
                             float const blade_puck_y,
-                            std::uint32_t &steal_cd_rem) noexcept {
+                            std::uint32_t &steal_cd_rem,
+                            std::uint32_t &shoot_cd_rem,
+                            std::uint32_t &shoot_charge_ticks) noexcept {
     if (steal_cd_rem != 0U) {
         return false;
     }
@@ -327,6 +329,8 @@ bool try_steal_carried_puck(std::int8_t &puck_carrier,
     apply_puck_strip_nudge(puck_x, puck_y, puck_vx, puck_vy, cursor_x, cursor_y, kMatchStealDamp,
                            kMatchStealNudge);
     steal_cd_rem = kPuckStealCooldownTicks;
+    shoot_cd_rem = kShootAfterStealBlockTicks;
+    shoot_charge_ticks = 0U;
     return true;
 }
 
@@ -531,7 +535,8 @@ HostMatchTickResult MatchWorld::tick_host_match(HostMatchTickInputs const &in,
         (void)try_steal_carried_puck(puck_carrier, puck_x, puck_y, puck_vx, puck_vy, host_sk_x,
                                      host_sk_y, host_sk_vx, host_sk_vy, host_facing_x, host_facing_y,
                                      local_mx, local_my, kPuckCarrierHost, carrier_px, carrier_py,
-                                     blade_puck_x, blade_puck_y, host_steal_cd_ticks);
+                                     blade_puck_x, blade_puck_y, host_steal_cd_ticks,
+                                     host_shoot_cooldown, host_shoot_charge_ticks);
     }
 
     if (puck_carrier == kPuckCarrierHost) {
@@ -568,7 +573,8 @@ HostMatchTickResult MatchWorld::tick_host_match(HostMatchTickInputs const &in,
                                          slot_facing_x[i], slot_facing_y[i], in.slot_mouse_x[i],
                                          in.slot_mouse_y[i], static_cast<std::int8_t>(i), carrier_px,
                                          carrier_py, blade_puck_x, blade_puck_y,
-                                         slot_steal_cd_ticks[i]);
+                                         slot_steal_cd_ticks[i], slot_shoot_cooldown[i],
+                                         slot_shoot_charge_ticks[i]);
         }
 
         if (puck_carrier == static_cast<std::int8_t>(i)) {

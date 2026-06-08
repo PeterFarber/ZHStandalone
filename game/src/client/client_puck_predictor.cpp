@@ -88,6 +88,7 @@ void ClientPuckPredictor::reset() noexcept {
     shoot_charge_ticks_ = 0.f;
     lmb_was_held_ = false;
     steal_cd_ticks_ = 0;
+    shoot_cd_ticks_ = 0;
     pickup_block_ticks_ = 0;
     cd_tick_frac_accum_ = 0.f;
 }
@@ -199,17 +200,18 @@ zh::game::MatchSoundEvents ClientPuckPredictor::advance(float frame_dt_sec,
             zh::game::apply_puck_strip_nudge(x_, y_, vx_, vy_, mouse_x, mouse_y,
                                              zh::game::kMatchStealDamp, zh::game::kMatchStealNudge);
             steal_cd_ticks_ = zh::game::kPuckStealCooldownTicks;
+            shoot_cd_ticks_ = zh::game::kShootAfterStealBlockTicks;
             shoot_charge_ticks_ = 0.f;
         }
     }
 
     if (my_slot < zh::kRemoteSlots && carrier_ == static_cast<std::int8_t>(my_slot)) {
-        if (lmb_held) {
+        if (lmb_held && shoot_cd_ticks_ == 0U) {
             float const charge_dt = std::min(dt, fixed_dt_sec);
             float const max_charge_sec =
                 static_cast<float>(zh::game::kShootChargeMaxTicks) * fixed_dt_sec;
             shoot_charge_ticks_ = std::min(max_charge_sec, shoot_charge_ticks_ + charge_dt);
-        } else if (lmb_was_held_ && shoot_charge_ticks_ > 0.f) {
+        } else if (lmb_was_held_ && !lmb_held && shoot_charge_ticks_ > 0.f && shoot_cd_ticks_ == 0U) {
             carrier_ = zh::kPuckCarrierFree;
             float const charge_frac =
                 std::clamp(shoot_charge_ticks_ / max_charge_sec_for_ticks(), 0.f, 1.f);
@@ -317,6 +319,9 @@ zh::game::MatchSoundEvents ClientPuckPredictor::advance(float frame_dt_sec,
         while (cd_tick_frac_accum_ >= 1.f) {
             if (steal_cd_ticks_ > 0U) {
                 --steal_cd_ticks_;
+            }
+            if (shoot_cd_ticks_ > 0U) {
+                --shoot_cd_ticks_;
             }
             if (pickup_block_ticks_ > 0U) {
                 --pickup_block_ticks_;
