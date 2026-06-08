@@ -225,7 +225,7 @@ if (downloadRaylib) then
         filter "action:vs*"
             debugdir "$(SolutionDir)"
 
-        filter {"action:gmake*"}
+        filter {"system:windows", "action:gmake*"}
             -- Static MinGW runtime so Release zips run without MSYS2 on PATH.
             -- -static pulls in libwinpthread after libraylib (link order matters).
             linkoptions {
