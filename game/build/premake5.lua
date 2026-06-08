@@ -226,13 +226,12 @@ if (downloadRaylib) then
             debugdir "$(SolutionDir)"
 
         filter {"action:gmake*"}
-            -- Static libgcc/libstdc++ (and pthread) so Release zips run without MSYS2/MinGW on PATH.
+            -- Static MinGW runtime so Release zips run without MSYS2 on PATH.
+            -- -static pulls in libwinpthread after libraylib (link order matters).
             linkoptions {
                 "-static-libgcc",
                 "-static-libstdc++",
-                "-Wl,-Bstatic",
-                "-lpthread",
-                "-Wl,-Bdynamic",
+                "-static",
             }
         filter{}
 
