@@ -2,6 +2,9 @@
 
 #include "zh/game/lobby_caps.hpp"
 
+#include "zh/game/constants.hpp"
+#include "zh/protocol.hpp"
+
 #include <cstddef>
 
 namespace zh::game {

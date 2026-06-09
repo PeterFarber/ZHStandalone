@@ -30,6 +30,7 @@ public:
                  float mouse_x,
                  float mouse_y,
                  std::uint8_t mouse_buttons,
+                 std::uint8_t move_axes,
                  std::uint8_t ability_axes,
                  std::uint8_t my_slot,
                  PackedSnapshot const &snap_authority_latest) noexcept;
@@ -48,6 +49,7 @@ public:
     [[nodiscard]] std::uint32_t boost_overspeed_ticks() const noexcept { return boost_overspeed_ticks_; }
     [[nodiscard]] std::uint32_t slide_decel_ticks() const noexcept { return slide_decel_ticks_; }
     [[nodiscard]] std::uint32_t one_timer_ticks() const noexcept { return one_timer_ticks_; }
+    [[nodiscard]] std::uint32_t one_timer_cd_ticks() const noexcept { return one_timer_cd_ticks_; }
     [[nodiscard]] std::uint32_t shield_ticks() const noexcept { return shield_ticks_; }
     [[nodiscard]] bool is_goalie() const noexcept { return is_goalie_; }
     [[nodiscard]] float one_timer_fraction() const noexcept;
@@ -71,6 +73,7 @@ private:
 
     std::uint8_t follow_ability_axes_{0};
     std::uint8_t ability_prev_{0};
+    std::uint8_t mouse_buttons_prev_{0};
 
     std::array<std::uint32_t, zh::game::kGoalieBoostCharges> boost_cd_ticks_{};
     std::uint32_t boost_overspeed_ticks_{0};

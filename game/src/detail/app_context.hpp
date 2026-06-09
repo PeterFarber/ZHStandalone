@@ -3,14 +3,15 @@
 // Everything the game needs at runtime that isn't worth exposing in zh::App.
 // One instance per process — host and client modes share this struct.
 
-#include "zh/win32_fix_net_order.h"
-
 #include "zh/client/wan_client_session.hpp"
 
-#include <raylib.h>
+#include "zh/gfx/gfx_compat.hpp"
 
 #include "zh/game/match_world.hpp"
-#include "zh/ui/rink_sprites.hpp"
+#include "zh/game/playing_camera.hpp"
+#include "zh/ui/playing_scene_3d.hpp"
+#include "zh/ui/playing_scene_pick.hpp"
+#include "zh/ui/render_test_scene.hpp"
 #include "zh/ui/skater_fx.hpp"
 #include "zh/ui/game_sounds.hpp"
 
@@ -36,6 +37,7 @@ enum class Screen : std::uint8_t {
     ClientLobby,
     Options,
     Playing,
+    RenderTest,
 };
 
 enum class JoinEditField : std::uint8_t {
@@ -132,12 +134,8 @@ struct AppContext {
     char host_session_hint_[176]{};
     double host_session_hint_until_sec_{0.};
 
-    Texture2D player_tex_team_a_{};
-    Texture2D player_tex_team_b_{};
-    Texture2D player_goalie_tex_team_a_{};
-    Texture2D player_goalie_tex_team_b_{};
-    bool player_tex_ready_{false};
-    zh::ui::RinkSpriteSet rink_sprites_{};
+    zh::ui::PlayingScene3D playing_scene_3d_{};
+    zh::ui::RenderTestScene render_test_{};
     zh::ui::SkaterFxSystem skater_fx_{};
     zh::ui::GameSoundBank game_sounds_{};
     double last_puck_collision_sound_sec_{0.};
@@ -150,12 +148,34 @@ struct AppContext {
     int sound_prev_faceoff_countdown_secs_{0};
 
     Camera2D playing_cam_{};
+    Camera3D playing_cam_3d_{};
     bool playing_cam_ready_{false};
-    float playing_cam_view_frac_{0.75f};
+    bool playing_cam_3d_ready_{false};
+    float playing_cam_view_frac_{zh::game::kPlayingDefaultViewFraction};
     float playing_cam_focus_x_{0.f};
     float playing_cam_focus_y_{0.f};
     float playing_cam_smooth_x_{0.f};
     float playing_cam_smooth_y_{0.f};
+    float playing_last_aim_x_{0.f};
+    float playing_last_aim_y_{0.f};
+
+    // Previous-tick host sim pose for render extrapolation (sim_match snapshots before integrate).
+    float host_render_prev_sk_x_{0.f};
+    float host_render_prev_sk_y_{0.f};
+    float host_render_prev_puck_x_{0.f};
+    float host_render_prev_puck_y_{0.f};
+
+    // Sampled once per frame after PollInputEvents (mouse edge + keyboard shared by sim/net/predict).
+    bool playing_input_cached_{false};
+    LocalPlayingInputSample playing_input_cache_{};
+    std::uint8_t playing_rmb_prev_held_{0};
+    bool playing_pick_debug_{false};
+    Vector2 playing_pick_debug_sim_{};
+    bool playing_pick_debug_ok_{false};
+    zh::ui::PlayingPickResult playing_pick_debug_pick_{};
+
+    zh::ui::PlayingWorldDraw playing_debug_world_draw_{};
+    bool playing_debug_world_draw_valid_{false};
 
     void host_reset_session();
     void client_reset_session();
@@ -168,11 +188,11 @@ struct AppContext {
     void sim_match(float dt);
     [[nodiscard]] std::uint8_t sample_input_bits() const;
     [[nodiscard]] std::uint8_t sample_ability_bits() const;
-    [[nodiscard]] Rectangle playing_leave_bounds() const;
-    [[nodiscard]] std::uint8_t sample_local_match_mouse(Rectangle leave,
-                                                         float &mouse_x_out,
-                                                         float &mouse_y_out);
+    [[nodiscard]] std::uint8_t sample_local_match_mouse(float &mouse_x_out, float &mouse_y_out);
     [[nodiscard]] LocalPlayingInputSample sample_local_playing_input();
+    [[nodiscard]] LocalPlayingInputSample build_local_playing_input_fresh();
+    void refresh_local_playing_input(float frame_dt);
+    void invalidate_local_playing_input_cache() noexcept;
 
     void render_frame(float interp_alpha, float frame_dt);
 
@@ -182,6 +202,7 @@ struct AppContext {
     void draw_options();
     void draw_client_lobby();
     void draw_playing(float interp_alpha, float frame_dt);
+    void draw_render_test(float frame_dt);
 
     void start_listen_server(std::uint16_t port);
     void stop_listen_server();
@@ -189,7 +210,7 @@ struct AppContext {
     [[nodiscard]] bool start_client_join(std::string const &ipv4, std::uint16_t port);
     void stop_client();
 
-    [[nodiscard]] int run();
+    [[nodiscard]] int run(int argc, char **argv);
 
     void record_sent_client_input(zh::PackedClientInput const &in);
 
@@ -199,8 +220,6 @@ struct AppContext {
     void broadcast_lobby_teams_if_hosting();
     void apply_match_start_spawn_from_lobby_teams();
 
-    void load_player_team_textures();
-    void unload_player_team_textures_if_any();
     void load_rink_texture();
     void unload_rink_texture_if_any();
     void load_game_sound_bank();
@@ -210,9 +229,13 @@ struct AppContext {
     void poll_match_ambient_sounds() noexcept;
     void reset_playing_camera() noexcept;
     void apply_playing_camera_zoom() noexcept;
-    void resolve_playing_camera_focus(float &focus_x, float &focus_y) const noexcept;
+    void resolve_playing_camera_focus(float &focus_x, float &focus_y,
+                                      float host_render_alpha = 0.f) const noexcept;
     void update_playing_camera(float focus_x, float focus_y, float frame_dt) noexcept;
+    [[nodiscard]] bool playing_screen_to_world(Vector2 screen, Vector2 &out_sim) const noexcept;
     [[nodiscard]] Vector2 playing_screen_to_world(Vector2 screen) const noexcept;
+    void refresh_playing_pick_debug(Vector2 screen, bool log_terminal, char const *button) noexcept;
+    void draw_playing_pick_debug_overlay() noexcept;
 
     void load_persisted_user_settings();
     [[nodiscard]] bool persist_user_settings() const;

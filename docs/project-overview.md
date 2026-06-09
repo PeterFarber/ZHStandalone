@@ -1,12 +1,12 @@
 # Project overview
 
-ZH Standalone is a **4v4 hockey prototype**: 2D rink, **listen-server** multiplayer over **UDP (ENet)**, drawn with **raylib**. The host runs the real simulation; remote clients send inputs and render predictions/interpolation.
+ZH Standalone is a **4v4 hockey prototype**: server-authoritative sim on a 2D rink plane, **listen-server** multiplayer over **UDP (ENet)**, drawn with **Vulkan** (GLFW). The host runs the real simulation; remote clients send inputs and render predictions/interpolation.
 
 ## Repo layout
 
 ```
 ZHStandalone/
-├── game/           C++ game (Premake + Make)
+├── game/           C++ game (CMake + vcpkg + Vulkan)
 ├── map-editor/     Browser map tool (Vite + TypeScript)
 └── docs/           Developer guides (this folder)
 ```
@@ -17,10 +17,11 @@ ZHStandalone/
 |------|------|
 | `src/` | C++ source |
 | `include/zh/` | Public headers by module |
-| `resources/` | PNG art (copied to `bin/` on build) |
+| `resources/` | Art, fonts, GLSL → SPIR-V shaders |
 | `maps/` | Map JSON (`default.json`) |
-| `build/` | `premake5.lua` — fetches deps into `build/external/` |
-| `scripts/` | `build.bat`, `build.sh`, `run.*` |
+| `cmake/` | CMake helpers (externals, vcpkg, shaders) |
+| `scripts/` | `build.bat`, `build.sh`, `fetch_externals.*`, `run.*` |
+| `vcpkg.json` | Manifest: glfw3, vulkan-loader, shaderc, woff2 |
 
 ### `map-editor/`
 
@@ -39,12 +40,12 @@ Options screen can set **input delay B** (host fairness) and **client interp lag
 ## Simulation vs session
 
 - **`zh::game::MatchWorld`** — puck, skaters, period, goals (host only).
-- **`zh::detail::AppContext`** — screens, lobby, ENet peers, slot tables, textures.
+- **`zh::detail::AppContext`** — screens, lobby, ENet peers, slot tables, render assets.
 
 Keep new gameplay rules in `game/` (`MatchWorld`, physics). Keep connection/UI glue in `detail/` and `ui/`.
 
 ## Fixed timestep
 
-Simulation runs at **60 Hz** (`zh::App::kFixedDt`). Rendering may run faster; the main loop can run multiple sim steps per frame (capped catch-up).
+Simulation runs at **60 Hz** (`zh::App::kFixedDt`). Rendering may run faster; the main loop can run multiple sim steps per frame (capped catch-up). Host draw extrapolates between sim ticks using `interp_alpha`.
 
 See [code-tour.md](code-tour.md) for file-level pointers.

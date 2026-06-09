@@ -1,37 +1,45 @@
 #!/usr/bin/env bash
+# CMake + vcpkg manifest (game/vcpkg.json).
 set -euo pipefail
 
-GAME="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$GAME/build"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
 
-if command -v premake5 >/dev/null 2>&1; then
-  premake5 gmake
-elif [[ -x ./premake5 ]]; then
-  ./premake5 gmake
-else
-  echo "[build.sh] error: premake5 not found (install premake5 or add to PATH)" >&2
+VCPKG_ROOT="${VCPKG_ROOT:-}"
+if [[ -n "$VCPKG_ROOT" && ! -x "$VCPKG_ROOT/vcpkg" ]]; then
+  VCPKG_ROOT=""
+fi
+VCPKG_ROOT="${VCPKG_ROOT:-$HOME/vcpkg}"
+if [[ ! -x "$VCPKG_ROOT/vcpkg" ]]; then
+  if [[ ! -d "$VCPKG_ROOT" ]]; then
+    echo "[build.sh] cloning vcpkg to $VCPKG_ROOT"
+    git clone https://github.com/microsoft/vcpkg.git "$VCPKG_ROOT"
+  fi
+  "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+fi
+
+TRIPLET="${VCPKG_TARGET_TRIPLET:-x64-linux}"
+TOOLCHAIN="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+
+echo "[build.sh] VCPKG_ROOT=$VCPKG_ROOT triplet=$TRIPLET"
+"$VCPKG_ROOT/vcpkg" install --x-manifest-root="$ROOT" --triplet "$TRIPLET"
+
+if [[ ! -f build/external/enet/include/enet/enet.h ]]; then
+  bash scripts/fetch_externals.sh
+fi
+
+BUILD_DIR=build/cmake-vk
+cmake -S . -B "$BUILD_DIR" -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
+  -DVCPKG_TARGET_TRIPLET="$TRIPLET"
+cp -f "$BUILD_DIR/compile_commands.json" "$ROOT/compile_commands.json"
+echo "[build.sh] compile_commands: $ROOT/compile_commands.json"
+cmake --build "$BUILD_DIR" --parallel
+
+if [[ ! -x bin/Release/zh_game ]]; then
+  echo "[build.sh] error: bin/Release/zh_game not found" >&2
   exit 1
 fi
 
-cd "$GAME"
-make config=release_x64 -j"$(nproc)"
-
-copy_tree() {
-  local src="$1"
-  local dst="$2"
-  if [[ -d "$src" ]]; then
-    mkdir -p "$dst"
-    cp -a "$src/." "$dst/"
-  fi
-}
-
-if [[ -f "$GAME/bin/Release/zh_game" || -f "$GAME/bin/Release/zh_game.exe" ]]; then
-  copy_tree "$GAME/resources" "$GAME/bin/Release/resources"
-  copy_tree "$GAME/maps" "$GAME/bin/Release/maps"
-fi
-if [[ -f "$GAME/bin/Debug/zh_game" || -f "$GAME/bin/Debug/zh_game.exe" ]]; then
-  copy_tree "$GAME/resources" "$GAME/bin/Debug/resources"
-  copy_tree "$GAME/maps" "$GAME/bin/Debug/maps"
-fi
-
-echo "[build.sh] ok: $GAME/bin/Release/zh_game"
+echo "[build.sh] ok: $ROOT/bin/Release/zh_game"

@@ -1,18 +1,18 @@
 #pragma once
 
-// Authoritative host-side match sim: puck, skaters, period clock. No Raylib or ENet here.
+// Authoritative host-side match sim: puck, skaters, period clock. No gfx or ENet here.
 
 #include "zh/game/constants.hpp"
 #include "zh/game/match_sound_events.hpp"
 #include "zh/protocol.hpp"
 
 #include <array>
-#include <cstddef>
 #include <cstdint>
 
 namespace zh::game {
 
 struct HostLocalTickInput {
+    std::uint8_t move_axes{0};
     std::uint8_t mouse_buttons{0};
     std::uint8_t ability_axes{0};
     float mouse_x{0.f};

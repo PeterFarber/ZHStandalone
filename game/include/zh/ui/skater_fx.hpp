@@ -1,7 +1,5 @@
 #pragma once
 
-// Client-side boost trail and slide-stop ice spray (visual only, no sim impact).
-
 #include <array>
 #include <cstdint>
 
@@ -33,7 +31,7 @@ class SkaterFxSystem {
               bool slide_spray) noexcept;
 
     void update(float dt) noexcept;
-    void draw() noexcept;
+    void draw_3d() const noexcept;
 
   private:
     struct SlotState {

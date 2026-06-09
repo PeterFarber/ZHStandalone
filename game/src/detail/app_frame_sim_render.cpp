@@ -13,6 +13,8 @@ void detail::AppContext::sim_fixed_step(float dt) {
         case Screen::Playing:
             sim_match(dt);  // host only does real work; client Playing sim is a no-op
             break;
+        case Screen::RenderTest:
+            break;
         default:
             break;
     }
@@ -22,7 +24,13 @@ void detail::AppContext::sim_home(float /*dt*/) {}
 
 void detail::AppContext::render_frame(float interp_alpha, float frame_dt) {
     BeginDrawing();
-    ClearBackground(Color{15, 20, 32, 255});
+    if (screen_ == Screen::Playing) {
+        ClearBackground(Color{196, 206, 218, 255});
+    } else if (screen_ == Screen::RenderTest) {
+        ClearBackground(Color{196, 206, 218, 255});
+    } else {
+        ClearBackground(Color{15, 20, 32, 255});
+    }
 
     switch (screen_) {
         case Screen::Home:
@@ -41,7 +49,6 @@ void detail::AppContext::render_frame(float interp_alpha, float frame_dt) {
             draw_options();
             break;
         case Screen::Playing:
-            apply_playing_camera_zoom();
             if (remote_client_) {
                 // Run before draw so local skater/puck feel responsive on WAN.
                 advance_client_local_predictor(frame_dt);
@@ -51,9 +58,14 @@ void detail::AppContext::render_frame(float interp_alpha, float frame_dt) {
             poll_match_ambient_sounds();
             draw_playing(interp_alpha, frame_dt);
             break;
+        case Screen::RenderTest:
+            draw_render_test(frame_dt);
+            break;
     }
 
-    DrawFPS(GetScreenWidth() - 118, GetScreenHeight() - 28);
+    if (screen_ != Screen::Playing && screen_ != Screen::RenderTest) {
+        DrawFPS(GetScreenWidth() - 118, GetScreenHeight() - 28);
+    }
     EndDrawing();
 }
 

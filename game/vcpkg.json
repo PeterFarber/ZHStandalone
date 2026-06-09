@@ -1,0 +1,12 @@
+{
+  "name": "zh-game",
+  "version-string": "0.1.0",
+  "description": "ZH Standalone game dependencies (Vulkan gfx path)",
+  "dependencies": [
+    "glfw3",
+    "shaderc",
+    "vulkan-headers",
+    "vulkan-loader",
+    "woff2"
+  ]
+}

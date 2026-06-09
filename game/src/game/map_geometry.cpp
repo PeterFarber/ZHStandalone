@@ -2,6 +2,8 @@
 
 #include "zh/game/map_geometry.hpp"
 
+#include "zh/game/constants.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -59,6 +61,89 @@ void reflect_velocity(float &vx, float &vy, float nx, float ny, float bounce) no
     vy *= bounce;
 }
 
+void resolve_circle_rect_bounce(float &px,
+                                float &py,
+                                float &vx,
+                                float &vy,
+                                float const radius,
+                                RectF const &rect,
+                                float const bounce) noexcept {
+    float const closest_x = std::clamp(px, rect.x, rect.x + rect.w);
+    float const closest_y = std::clamp(py, rect.y, rect.y + rect.h);
+    float dx = px - closest_x;
+    float dy = py - closest_y;
+    float dist_sq = dx * dx + dy * dy;
+    float const r_sq = radius * radius;
+
+    if (dist_sq >= r_sq) {
+        return;
+    }
+
+    float nx = 0.f;
+    float ny = 0.f;
+    float pen = 0.f;
+
+    if (dist_sq > 1e-6f) {
+        float const dist = std::sqrt(dist_sq);
+        nx = dx / dist;
+        ny = dy / dist;
+        pen = radius - dist;
+    } else {
+        float const to_left = px - rect.x;
+        float const to_right = rect.x + rect.w - px;
+        float const to_top = py - rect.y;
+        float const to_bottom = rect.y + rect.h - py;
+        float min_pen = to_left;
+        nx = -1.f;
+        ny = 0.f;
+        if (to_right < min_pen) {
+            min_pen = to_right;
+            nx = 1.f;
+            ny = 0.f;
+        }
+        if (to_top < min_pen) {
+            min_pen = to_top;
+            nx = 0.f;
+            ny = -1.f;
+        }
+        if (to_bottom < min_pen) {
+            min_pen = to_bottom;
+            nx = 0.f;
+            ny = 1.f;
+        }
+        pen = radius + min_pen;
+    }
+
+    px += nx * pen;
+    py += ny * pen;
+    reflect_velocity(vx, vy, nx, ny, bounce);
+}
+
+void resolve_circle_circle_bounce(float &px,
+                                  float &py,
+                                  float &vx,
+                                  float &vy,
+                                  float const radius,
+                                  float const cx,
+                                  float const cy,
+                                  float const other_r,
+                                  float const bounce) noexcept {
+    float dx = px - cx;
+    float dy = py - cy;
+    float const dist_sq = dx * dx + dy * dy;
+    float const sum_r = radius + other_r;
+    if (dist_sq >= sum_r * sum_r || dist_sq < 1e-8f) {
+        return;
+    }
+    float const dist = std::sqrt(dist_sq);
+    float const nx = dx / dist;
+    float const ny = dy / dist;
+    float const pen = sum_r - dist;
+    px += nx * pen;
+    py += ny * pen;
+    reflect_velocity(vx, vy, nx, ny, bounce);
+}
+
 }  // namespace
 
 bool arc_from_three_points(MapArc3 const &arc, ArcGeom &out) noexcept {
@@ -113,6 +198,101 @@ RectF goal_zone_bounds(MapGoalZone const &zone) noexcept {
         max_y = std::max(max_y, y);
     }
     return RectF{min_x, min_y, max_x - min_x, max_y - min_y};
+}
+
+GoalEnclosureLayout goal_enclosure_layout(RectF const &zone, bool const west_goal) noexcept {
+    GoalEnclosureLayout g{};
+    g.mouth_x = west_goal ? zone.x + zone.w : zone.x;
+    g.back_x = west_goal ? zone.x : zone.x + zone.w;
+    g.top_y = zone.y;
+    g.bot_y = zone.y + zone.h;
+    return g;
+}
+
+void goal_enclosure_corners(GoalEnclosureLayout const &layout,
+                            bool const west_goal,
+                            GoalEnclosureCorner out_corners[4]) noexcept {
+    float const offset = kGoalCornerCylinderRadius * kGoalCornerCylinderOutsetFactor;
+    if (west_goal) {
+        out_corners[0] = {layout.back_x - offset, layout.top_y - offset};
+        out_corners[1] = {layout.back_x - offset, layout.bot_y + offset};
+        out_corners[2] = {layout.mouth_x + offset, layout.top_y - offset};
+        out_corners[3] = {layout.mouth_x + offset, layout.bot_y + offset};
+    } else {
+        out_corners[0] = {layout.back_x + offset, layout.top_y - offset};
+        out_corners[1] = {layout.back_x + offset, layout.bot_y + offset};
+        out_corners[2] = {layout.mouth_x - offset, layout.top_y - offset};
+        out_corners[3] = {layout.mouth_x - offset, layout.bot_y + offset};
+    }
+}
+
+void resolve_circle_against_goal_enclosure(float &px,
+                                           float &py,
+                                           float &vx,
+                                           float &vy,
+                                           float const radius,
+                                           float const bounce,
+                                           GoalEnclosureLayout const &layout,
+                                           bool const west_goal) noexcept {
+    float const depth = layout.depth();
+    float const width = layout.width();
+    if (depth <= 1e-3f || width <= 1e-3f) {
+        return;
+    }
+
+    float const t = kGoalEnclosureWallThickness;
+    float const back_min_x = std::min(layout.mouth_x, layout.back_x);
+    float const corner_r = kGoalCornerCylinderRadius;
+
+    if (west_goal) {
+        resolve_circle_rect_bounce(px, py, vx, vy, radius,
+                                   RectF{layout.back_x - t, layout.top_y, t, width}, bounce);
+        resolve_circle_rect_bounce(px, py, vx, vy, radius,
+                                   RectF{layout.back_x, layout.top_y - t, depth, t}, bounce);
+        resolve_circle_rect_bounce(px, py, vx, vy, radius,
+                                   RectF{layout.back_x, layout.bot_y, depth, t}, bounce);
+    } else {
+        resolve_circle_rect_bounce(px, py, vx, vy, radius,
+                                   RectF{layout.back_x, layout.top_y, t, width}, bounce);
+        resolve_circle_rect_bounce(px, py, vx, vy, radius,
+                                   RectF{back_min_x, layout.top_y - t, depth, t}, bounce);
+        resolve_circle_rect_bounce(px, py, vx, vy, radius,
+                                   RectF{back_min_x, layout.bot_y, depth, t}, bounce);
+    }
+
+    GoalEnclosureCorner corners[4]{};
+    goal_enclosure_corners(layout, west_goal, corners);
+    for (GoalEnclosureCorner const &c : corners) {
+        resolve_circle_circle_bounce(px, py, vx, vy, radius, c.x, c.y, corner_r, bounce);
+    }
+}
+
+void resolve_circle_against_goal_zone_enclosure(float &px,
+                                                  float &py,
+                                                  float &vx,
+                                                  float &vy,
+                                                  float const radius,
+                                                  float const bounce,
+                                                  MapGoalZone const &zone,
+                                                  bool const west_goal) noexcept {
+    if (zone.kind != MapZoneShapeKind::Rect) {
+        resolve_circle_arc_bounce(px, py, vx, vy, radius, zone.arc, bounce);
+        return;
+    }
+    GoalEnclosureLayout const layout = goal_enclosure_layout(zone.rect, west_goal);
+    resolve_circle_against_goal_enclosure(px, py, vx, vy, radius, bounce, layout, west_goal);
+}
+
+CapsuleBoardOutline capsule_board_outline(RectF const &player_bounds) noexcept {
+    CapsuleBoardOutline o{};
+    o.bounds = player_bounds;
+    o.min_y = player_bounds.y;
+    o.max_y = player_bounds.y + player_bounds.h;
+    o.mid_y = (o.min_y + o.max_y) * 0.5f;
+    o.end_radius = player_bounds.h * 0.5f;
+    o.flat_left_x = player_bounds.x + o.end_radius;
+    o.flat_right_x = player_bounds.x + player_bounds.w - o.end_radius;
+    return o;
 }
 
 // Goal scoring overlap: AABB for rect zones; arc closest-point + chord bulge heuristic for arcs.

@@ -1,32 +1,26 @@
-// MP3 gameplay cues from resources/sounds/.
-
 #include "zh/ui/game_sounds.hpp"
 
 #include "detail/resource_paths.hpp"
+
+#include <cstdio>
 
 namespace zh::ui {
 
 namespace {
 
-Sound try_load_sound(char const *rel) noexcept {
+zh::audio::SoundHandle try_load_sound(char const *rel) noexcept {
     char const *path = zh::detail::resolve_resource_file(rel);
     if (path == nullptr) {
-        return Sound{};
+        return {};
     }
-    Sound const snd = LoadSound(path);
-    if (snd.frameCount <= 0) {
-        TraceLog(LOG_WARNING, "[zh] LoadSound failed: %s", path);
-        return Sound{};
-    }
-    return snd;
+    return zh::audio::global_engine().load_file(path);
 }
 
-void play_if_ready(Sound const &snd, float const volume) noexcept {
-    if (snd.frameCount <= 0) {
+void play_if_ready(zh::audio::SoundHandle const &snd, float const volume) noexcept {
+    if (!snd.valid()) {
         return;
     }
-    SetSoundVolume(snd, volume);
-    PlaySound(snd);
+    zh::audio::global_engine().play(snd, volume);
 }
 
 }  // namespace
@@ -40,38 +34,25 @@ void load_game_sounds(GameSoundBank &out) noexcept {
     out.puck_collision = try_load_sound("sounds/PuckCollision.mp3");
     out.puck_metal_collision = try_load_sound("sounds/PuckMetalCollision.mp3");
     out.faceoff_countdown = try_load_sound("sounds/Countdown.mp3");
-    out.ready = out.zoom.frameCount > 0 || out.one_timer.frameCount > 0 || out.shield.frameCount > 0 ||
-                out.shot.frameCount > 0 || out.puck_collision.frameCount > 0 ||
-                out.puck_metal_collision.frameCount > 0 || out.faceoff_countdown.frameCount > 0;
+    out.ready = out.zoom.valid() || out.one_timer.valid() || out.shield.valid() ||
+                out.shot.valid() || out.puck_collision.valid() ||
+                out.puck_metal_collision.valid() || out.faceoff_countdown.valid();
     if (out.ready) {
-        TraceLog(LOG_INFO, "[zh] Loaded gameplay sounds from resources/sounds/");
+        std::fprintf(stderr, "[zh] Loaded gameplay sounds from resources/sounds/\n");
     } else {
-        TraceLog(LOG_WARNING, "[zh] No gameplay sounds found under resources/sounds/");
+        std::fprintf(stderr, "[zh] No gameplay sounds found under resources/sounds/\n");
     }
 }
 
 void unload_game_sounds(GameSoundBank &bank) noexcept {
-    if (bank.zoom.frameCount > 0) {
-        UnloadSound(bank.zoom);
-    }
-    if (bank.one_timer.frameCount > 0) {
-        UnloadSound(bank.one_timer);
-    }
-    if (bank.shield.frameCount > 0) {
-        UnloadSound(bank.shield);
-    }
-    if (bank.shot.frameCount > 0) {
-        UnloadSound(bank.shot);
-    }
-    if (bank.puck_collision.frameCount > 0) {
-        UnloadSound(bank.puck_collision);
-    }
-    if (bank.puck_metal_collision.frameCount > 0) {
-        UnloadSound(bank.puck_metal_collision);
-    }
-    if (bank.faceoff_countdown.frameCount > 0) {
-        UnloadSound(bank.faceoff_countdown);
-    }
+    auto &eng = zh::audio::global_engine();
+    eng.unload(bank.zoom);
+    eng.unload(bank.one_timer);
+    eng.unload(bank.shield);
+    eng.unload(bank.shot);
+    eng.unload(bank.puck_collision);
+    eng.unload(bank.puck_metal_collision);
+    eng.unload(bank.faceoff_countdown);
     bank = GameSoundBank{};
 }
 

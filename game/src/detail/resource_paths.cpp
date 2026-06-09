@@ -1,6 +1,6 @@
 #include "detail/resource_paths.hpp"
 
-#include <raylib.h>
+#include "zh/gfx/gfx_compat.hpp"
 
 #include <cstdio>
 

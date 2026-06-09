@@ -2,9 +2,7 @@
 
 #include "zh/net/host/host_gameplay_router.hpp"
 
-#include "zh/game/constants.hpp"
 #include "zh/game/map_runtime.hpp"
-#include "zh/game/rink_layout.hpp"
 
 #include <cstdio>
 

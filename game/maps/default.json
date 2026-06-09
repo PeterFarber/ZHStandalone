@@ -41,12 +41,7 @@
       "y": 544
     },
     "host": null,
-    "slots": [
-      null,
-      null,
-      null,
-      null
-    ],
+    "slots": [null, null, null, null],
     "team_a": {
       "goalie": {
         "x": 64,
@@ -109,8 +104,8 @@
       "stroke": "#000000",
       "strokeWidth": 6,
       "tag": "Color rect",
-      "cornerRadius": 320,
-      "locked": true
+      "locked": true,
+      "cornerRadius": 320
     },
     {
       "kind": "circle",
@@ -160,90 +155,6 @@
     {
       "kind": "line",
       "p1": {
-        "x": -32,
-        "y": 448
-      },
-      "p2": {
-        "x": -96,
-        "y": 448
-      },
-      "stroke": "#0033ff",
-      "strokeWidth": 6,
-      "tag": "Color line"
-    },
-    {
-      "kind": "line",
-      "p1": {
-        "x": -96,
-        "y": 448
-      },
-      "p2": {
-        "x": -96,
-        "y": 640
-      },
-      "stroke": "#0033ff",
-      "strokeWidth": 6,
-      "tag": "Color line"
-    },
-    {
-      "kind": "line",
-      "p1": {
-        "x": -96,
-        "y": 640
-      },
-      "p2": {
-        "x": -32,
-        "y": 640
-      },
-      "stroke": "#0033ff",
-      "strokeWidth": 6,
-      "tag": "Color line"
-    },
-    {
-      "kind": "line",
-      "p1": {
-        "x": 1952,
-        "y": 448
-      },
-      "p2": {
-        "x": 2016,
-        "y": 448
-      },
-      "stroke": "#ff0000",
-      "strokeWidth": 6,
-      "tag": "Color line"
-    },
-    {
-      "kind": "line",
-      "p1": {
-        "x": 2016,
-        "y": 448
-      },
-      "p2": {
-        "x": 2016,
-        "y": 640
-      },
-      "stroke": "#ff0000",
-      "strokeWidth": 6,
-      "tag": "Color line"
-    },
-    {
-      "kind": "line",
-      "p1": {
-        "x": 2016,
-        "y": 640
-      },
-      "p2": {
-        "x": 1952,
-        "y": 640
-      },
-      "stroke": "#ff0000",
-      "strokeWidth": 6,
-      "tag": "Color line"
-    },
-    {
-      "kind": "line",
-      "p1": {
         "x": 960,
         "y": 0
       },
@@ -251,9 +162,9 @@
         "x": 960,
         "y": 416
       },
-      "tag": "Color line",
       "stroke": "#030303",
-      "strokeWidth": 6
+      "strokeWidth": 6,
+      "tag": "Color line"
     },
     {
       "kind": "line",
@@ -265,78 +176,12 @@
         "x": 960,
         "y": 1088
       },
-      "tag": "Color line",
       "stroke": "#030303",
-      "strokeWidth": 6
+      "strokeWidth": 6,
+      "tag": "Color line"
     }
   ],
   "colliders": [
-    {
-      "kind": "line",
-      "p1": {
-        "x": -32,
-        "y": 448
-      },
-      "p2": {
-        "x": -96,
-        "y": 448
-      }
-    },
-    {
-      "kind": "line",
-      "p1": {
-        "x": -96,
-        "y": 640
-      },
-      "p2": {
-        "x": -96,
-        "y": 448
-      }
-    },
-    {
-      "kind": "line",
-      "p1": {
-        "x": -96,
-        "y": 640
-      },
-      "p2": {
-        "x": -32,
-        "y": 640
-      }
-    },
-    {
-      "kind": "line",
-      "p1": {
-        "x": 1952,
-        "y": 448
-      },
-      "p2": {
-        "x": 2016,
-        "y": 448
-      }
-    },
-    {
-      "kind": "line",
-      "p1": {
-        "x": 2016,
-        "y": 448
-      },
-      "p2": {
-        "x": 2016,
-        "y": 640
-      }
-    },
-    {
-      "kind": "line",
-      "p1": {
-        "x": 2016,
-        "y": 640
-      },
-      "p2": {
-        "x": 1952,
-        "y": 640
-      }
-    },
     {
       "kind": "rect",
       "rect": {
@@ -350,8 +195,7 @@
     }
   ],
   "background": {
-    "image": "background.png",
-    "repeat": true,
+    "color": "#e8f0f8",
     "dest": {
       "x": -380,
       "y": -78.75,

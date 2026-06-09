@@ -2,9 +2,9 @@
 
 #include "zh/ui/skater_fx.hpp"
 
-#include "zh/game/constants.hpp"
+#include "zh/ui/world_space_3d.hpp"
 
-#include <raylib.h>
+#include "zh/gfx/gfx_compat.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -241,7 +241,16 @@ void SkaterFxSystem::update(float const dt) noexcept {
     particle_count_ = write;
 }
 
-void SkaterFxSystem::draw() noexcept {
+void SkaterFxSystem::draw_3d() const noexcept {
+    auto draw_world_disc = [&](float const sx, float const sy, float const world_r,
+                               Color const col) {
+        if (col.a == 0 || world_r <= 0.05f) {
+            return;
+        }
+        Vector3 const center = sim_to_world3(sx, sy, kPlayingFxDiscY);
+        DrawCylinder(center, world_r, world_r, kPlayingFxDiscHeight, 12, col);
+    };
+
     for (std::size_t si = 0; si < trails_.size(); ++si) {
         for (TrailGhost const &g : trails_[si]) {
             if (g.max_age <= 0.f || g.age >= g.max_age) {
@@ -249,10 +258,10 @@ void SkaterFxSystem::draw() noexcept {
             }
             float const t = g.age / g.max_age;
             Color const col = trail_color(t);
-            DrawCircleV({g.x, g.y}, g.radius * (1.f - t * 0.35f), col);
+            draw_world_disc(g.x, g.y, g.radius * (1.f - t * 0.35f), col);
             if (col.a > 40) {
-                DrawCircleV({g.x, g.y}, g.radius * 0.35f * (1.f - t),
-                            Color{210, 245, 255, static_cast<unsigned char>(col.a / 2)});
+                draw_world_disc(g.x, g.y, g.radius * 0.35f * (1.f - t),
+                                Color{210, 245, 255, static_cast<unsigned char>(col.a / 2)});
             }
         }
     }
@@ -265,7 +274,7 @@ void SkaterFxSystem::draw() noexcept {
         float const t = p.age / p.max_age;
         Color col = ice_color(t);
         col.a = static_cast<unsigned char>(std::min(col.a, p.alpha));
-        DrawCircleV({p.x, p.y}, p.radius * (1.f - t * 0.4f), col);
+        draw_world_disc(p.x, p.y, p.radius * (1.f - t * 0.4f), col);
     }
 }
 

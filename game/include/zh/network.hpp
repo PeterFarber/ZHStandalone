@@ -2,6 +2,10 @@
 
 // Thin RAII around ENet. Two channels: gameplay (unreliable) and handshake (reliable).
 
+#if defined(_WIN32)
+#include "zh/winsock_first.h"
+#endif
+
 #include <cstddef>
 #include <cstdint>
 #include <functional>

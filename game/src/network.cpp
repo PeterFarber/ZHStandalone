@@ -1,6 +1,4 @@
 // ENet init + ListenHost / GameClient wrappers used by host and WAN client paths.
-#include "zh/win32_fix_net_order.h"
-
 #include "zh/network.hpp"
 
 #include <cstdio>

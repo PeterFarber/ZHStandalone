@@ -4,8 +4,6 @@
 // Durations in "ticks" use the fixed sim step (60 Hz; see zh::App::kFixedDt).
 // Distances and speeds are in world units unless noted.
 
-#include "zh/game/rink_layout.hpp"
-
 #include <cstddef>
 #include <cstdint>
 
@@ -47,16 +45,14 @@ inline constexpr std::uint32_t kSnapshotBroadcastPeriodTicks = 3U;
 inline constexpr std::uint32_t kClientPredExecTickSlack = kSnapshotBroadcastPeriodTicks + 3U;
 
 // =============================================================================
-// Presentation — collision & sprite sizes
+// Presentation — collision sizes
 // =============================================================================
 
 inline constexpr float kPuckDrawRadius = 9.f;
 inline constexpr float kSkaterDrawRadius = 12.f;
 inline constexpr float kGoalieDrawRadius = 16.f;
-inline constexpr float kSkaterSpriteDrawPx = 32.f;
-inline constexpr float kGoalieSpriteDrawPx = 42.f;
-// One background repeat tile: texture scales into this many world units (smaller = denser repeat).
-inline constexpr float kBackgroundTileTexels = 48.f;
+inline constexpr float kSkaterBodyHeight = 24.f;
+inline constexpr float kGoalieBodyHeight = 30.f;
 
 // =============================================================================
 // Skater movement
@@ -68,6 +64,12 @@ inline constexpr float kSkaterFrictionCoast = 0.993f;  // per-tick multiplier wh
 inline constexpr float kSkaterStopSpeed = 14.f;          // below this, treat as stopped
 // End-board / goal-frame bounce (same restitution as loose puck on boards).
 inline constexpr float kSkaterWallBounceFactor = 0.98f;
+inline constexpr float kGoalEnclosureWallThickness = 8.f;
+inline constexpr float kGoalCornerCylinderRadius = 7.f;
+inline constexpr float kGoalCornerCylinderHeightExtra = 8.f;
+// Corner cylinder offset from the wall junction (fraction of radius; outward hides wall edges).
+inline constexpr float kGoalCornerCylinderOutsetFactor = 0.28f;
+inline constexpr float kGoalFramePostRadius = 5.f;
 // Below this speed, blade direction uses stored facing instead of velocity.
 inline constexpr float kSkaterMoveFacingSpeed = 42.f;
 
@@ -98,10 +100,6 @@ inline constexpr unsigned kGoalieBoostCharges = 2U;
 
 [[nodiscard]] inline constexpr unsigned player_boost_charge_count(bool is_goalie) noexcept {
     return is_goalie ? kGoalieBoostCharges : 1U;
-}
-
-[[nodiscard]] inline constexpr float player_sprite_draw_px(bool is_goalie) noexcept {
-    return is_goalie ? kGoalieSpriteDrawPx : kSkaterSpriteDrawPx;
 }
 
 // =============================================================================

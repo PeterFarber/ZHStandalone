@@ -3,12 +3,10 @@
 #include "zh/game/puck_physics.hpp"
 
 #include "zh/game/constants.hpp"
-#include "zh/game/map_geometry.hpp"
-#include "zh/game/map_runtime.hpp"
+#include "zh/protocol.hpp"
+#include "zh/game/rink_layout.hpp"
 #include "zh/game/rink_layout.hpp"
 #include "zh/game/skater_physics.hpp"
-
-#include <raylib.h>
 
 #include <algorithm>
 #include <cmath>
@@ -211,7 +209,7 @@ void face_off_spawn_puck(float &px,
 }
 
 float shoot_charge_fraction(std::uint32_t const charge_ticks) noexcept {
-    if (kShootChargeMaxTicks == 0U) {
+    if constexpr (kShootChargeMaxTicks == 0U) {
         return 0.f;
     }
     float const frac =
@@ -224,7 +222,7 @@ float shoot_aim_distance_factor(float const sk_x,
                                 float const cursor_x,
                                 float const cursor_y) noexcept {
     float const dist = std::hypot(cursor_x - sk_x, cursor_y - sk_y);
-    if (kShootAimDistForMax <= 1.f) {
+    if constexpr (kShootAimDistForMax <= 1.f) {
         return 1.f;
     }
     float const scaled = dist / kShootAimDistForMax;
@@ -299,53 +297,6 @@ void apply_puck_strip_nudge(float const puck_x,
         float const py = to_cur_y / pull_len;
         vx += px * steal_nudge_pull;
         vy += py * steal_nudge_pull;
-    }
-}
-
-void apply_skater_puck_steal_or_shoot(float sk_x,
-                                      float sk_y,
-                                      float puck_x,
-                                      float puck_y,
-                                      float &vx,
-                                      float &vy,
-                                      float cursor_x,
-                                      float cursor_y,
-                                      float slap_strength,
-                                      float steal_damp,
-                                      float steal_nudge_pull) noexcept {
-    float const puck_dx = puck_x - sk_x;
-    float const puck_dy = puck_y - sk_y;
-    float const puck_d2 = puck_dx * puck_dx + puck_dy * puck_dy;
-
-    constexpr float kStickReach = 118.f;
-    float const stick_sq = kStickReach * kStickReach;
-
-    float const aim_dx = cursor_x - sk_x;
-    float const aim_dy = cursor_y - sk_y;
-    float const aim_len2 = aim_dx * aim_dx + aim_dy * aim_dy;
-    if (aim_len2 < 49.f) {
-        return;
-    }
-    float const inv = 1.f / std::sqrt(aim_len2);
-    float const sx = aim_dx * inv;
-    float const sy = aim_dy * inv;
-
-    if (puck_d2 <= stick_sq) {
-        vx *= steal_damp;
-        vy *= steal_damp;
-
-        float const to_cur_x = cursor_x - puck_x;
-        float const to_cur_y = cursor_y - puck_y;
-        float const pull_len = std::hypot(to_cur_x, to_cur_y);
-        if (pull_len >= 22.f) {
-            float const px = to_cur_x / pull_len;
-            float const py = to_cur_y / pull_len;
-            vx += px * steal_nudge_pull;
-            vy += py * steal_nudge_pull;
-        }
-    } else {
-        vx += sx * slap_strength;
-        vy += sy * slap_strength;
     }
 }
 

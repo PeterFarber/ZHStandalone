@@ -23,9 +23,9 @@ void detail::AppContext::advance_client_local_predictor(float const frame_dt) {
         return;
     }
 
-    LocalPlayingInputSample const local = sample_local_playing_input();
+    LocalPlayingInputSample const local = build_local_playing_input_fresh();
     wan_.skater.advance(frame_dt, App::kFixedDt, local.mouse_x, local.mouse_y, local.mouse_buttons,
-                        local.ability_axes, wan_.my_slot, snap_new_);
+                        local.move_axes, local.ability_axes, wan_.my_slot, snap_new_);
 }
 
 void detail::AppContext::advance_client_puck_prediction(float const frame_dt) {
@@ -73,9 +73,16 @@ void detail::AppContext::poll_network() {
 
     if (remote_client_ && screen_ == Screen::Playing) {
         LocalPlayingInputSample const local = sample_local_playing_input();
+        std::uint8_t mouse_buttons = local.mouse_buttons;
+        if ((mouse_buttons & kClientMouseRmbHeld) != 0U &&
+            (playing_rmb_prev_held_ & kClientMouseRmbHeld) == 0U) {
+            mouse_buttons |= kClientMouseRmbClick;
+        }
+        playing_rmb_prev_held_ =
+            static_cast<std::uint8_t>(local.mouse_buttons & kClientMouseRmbHeld);
         params.send_playing_input = true;
         params.playing_send = WanClientPlayingSendSample{
-            local.move_axes, local.ability_axes, local.mouse_x, local.mouse_y, local.mouse_buttons};
+            local.move_axes, local.ability_axes, local.mouse_x, local.mouse_y, mouse_buttons};
         params.on_sent_input_record = [this](PackedClientInput const &in) {
             record_sent_client_input(in);
         };

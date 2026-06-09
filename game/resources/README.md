@@ -1,30 +1,27 @@
 # Runtime assets (`resources/`)
 
-Files here are copied next to **`zh_game.exe`** when you run **`game\scripts\build.bat`**.
+Files here are copied next to the game executable when you run **`game/scripts/build.bat`** or **`build.sh`**.
 
-## Modular rink (`resources/rink/`)
+## Shaders (`resources/shaders/vk/`)
 
-| File | Use |
-|------|-----|
-| `ice_tile.png` | Tileable ice surface (128×128) |
-| `board_horizontal.png` | Top/bottom straight boards |
-| `board_vertical.png` | Side straight boards |
-| `board_corner_tl/tr/bl/br.png` | Corner connectors |
-| `board_end_left/right.png` | Rounded end-cap boards |
-| `goal_left/right.png` | Goal mouth sprites (transparent top-down; see `tools/process_goal_sprite.py`) |
+Vulkan GLSL sources compiled to `*.spv` beside the sources at build time (CMake + shaderc).
 
-Regenerate placeholders: `python tools/generate_rink_assets.py`
+## UI fonts (`resources/fonts/`)
 
-## Player sprites (`resources/sprites/`)
+Vulkan `DrawText` loads from here (copied beside the exe at build time).
 
 | File | Use |
 |------|-----|
-| `player_skater.png` | Skater (Team A base; Team B hue-shifted at load) |
-| `player_goalie.png` | Goalie (larger sprite in-game) |
+| `game.woff2` | Preferred UI font |
+| `game.ttf` | TTF fallback if WOFF2 decode is unavailable |
+| `ui.woff2` / `ui.ttf` | Alternate preferred names |
+| Any other `.woff2` / `.ttf` / `.otf` | Used if no named file is found (first in folder) |
 
-Legacy fallback: `player_sprite.png` at repo root of `resources/` for skaters only.
+WOFF2 decoding uses the vcpkg `woff2` port. Windows fallback: Segoe UI / Arial if the folder is empty.
 
 ## Gameplay sounds (`resources/sounds/`)
+
+MP3 cues loaded by `game/src/ui/game_sounds.cpp` (miniaudio). Expected names:
 
 | File | Use |
 |------|-----|
@@ -36,4 +33,6 @@ Legacy fallback: `player_sprite.png` at repo root of `resources/` for skaters on
 | `PuckMetalCollision.mp3` | Loose puck hits goal frames |
 | `Countdown.mp3` | Faceoff countdown start |
 
-Replace any PNG with your own art — keep filenames and transparency.
+## Map backgrounds
+
+Map JSON can reference image paths under `resources/` (e.g. repeating `background.png`). Export from the map editor or edit `game/maps/default.json` directly. The **3D playing rink** geometry comes from map shapes (`map_shape_draw.cpp`), not from a fixed sprite sheet.

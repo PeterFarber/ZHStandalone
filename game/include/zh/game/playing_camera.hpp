@@ -5,14 +5,15 @@
 #include "zh/game/types.hpp"
 
 #include <algorithm>
-#include <cmath>
 
 namespace zh::game {
 
-// Most zoomed out: at most this fraction of `player_bounds` width/height visible per axis.
-inline constexpr float kPlayingMaxVisiblePlayFraction = 0.75f;
+// Most zoomed out: show nearly full rink width on large maps.
+inline constexpr float kPlayingMaxVisiblePlayFraction = 0.88f;
+// Default zoom at match start — moderate zoom-out so more of the rink is visible.
+inline constexpr float kPlayingDefaultViewFraction = 0.55f;
 // Most zoomed in: smallest play-area fraction shown at once.
-inline constexpr float kPlayingMinVisiblePlayFraction = 0.18f;
+inline constexpr float kPlayingMinVisiblePlayFraction = 0.14f;
 // Mouse-wheel multiplicative step on view fraction (>1 = coarser steps).
 inline constexpr float kPlayingViewFractionWheelStep = 1.12f;
 
@@ -20,7 +21,7 @@ inline constexpr float kPlayingViewFractionWheelStep = 1.12f;
     return std::clamp(frac, kPlayingMinVisiblePlayFraction, kPlayingMaxVisiblePlayFraction);
 }
 
-// Raylib `Camera2D::zoom` for showing `view_fraction` of the play bounds.
+// Camera2D zoom for showing `view_fraction` of the play bounds.
 [[nodiscard]] inline float playing_zoom_for_view_fraction(float view_fraction,
                                                            float viewport_w,
                                                            float viewport_h,

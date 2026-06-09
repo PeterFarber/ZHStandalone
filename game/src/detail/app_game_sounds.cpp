@@ -2,11 +2,8 @@
 
 #include "detail/app_context.hpp"
 
-#include "zh/game/constants.hpp"
-#include "zh/game/match_world.hpp"
+#include "zh/gfx/gfx_compat.hpp"
 #include "zh/ui/game_sounds.hpp"
-
-#include <raylib.h>
 
 namespace zh::detail {
 
