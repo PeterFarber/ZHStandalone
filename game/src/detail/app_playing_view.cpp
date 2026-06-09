@@ -450,7 +450,7 @@ void draw_faceoff_countdown_overlay(int const countdown_secs) noexcept {
     float const sh = static_cast<float>(GetScreenHeight());
     Vector2 const center{sw * 0.5f, sh * 0.5f};
 
-    char label[8];
+    char label[16];
     std::snprintf(label, sizeof(label), "%d", std::max(1, countdown_secs));
     int const fs = 112;
     int const tw = MeasureText(label, fs);

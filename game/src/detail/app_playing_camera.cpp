@@ -184,7 +184,7 @@ void detail::AppContext::refresh_playing_pick_debug(Vector2 const screen,
     playing_pick_debug_sim_ = sim;
     playing_pick_debug_ok_ = ok;
 
-    playing_pick_debug_pick_ = {};
+    playing_pick_debug_pick_ = zh::ui::PlayingPickResult{};
     if (playing_cam_3d_ready_ && playing_debug_world_draw_valid_) {
         playing_pick_debug_pick_ =
             zh::ui::pick_playing_scene(screen, playing_cam_3d_, playing_debug_world_draw_);
