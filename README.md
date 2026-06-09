@@ -1,12 +1,12 @@
 # ZH Standalone
 
-4v4 server-authoritative hockey prototype (2D first). Listen-server multiplayer over UDP (ENet), rendered with raylib.
+4v4 server-authoritative hockey prototype. Listen-server multiplayer over UDP (ENet), rendered with **Vulkan** (GLFW).
 
 ## Layout
 
 | Folder | What it is |
 |--------|------------|
-| `game/` | C++ game — source, assets, maps, Premake build |
+| `game/` | C++ game — source, assets, maps, CMake + vcpkg build |
 | `map-editor/` | Browser map editor (TypeScript / Vite) |
 | `docs/` | [Developer guides](docs/README.md) |
 
@@ -18,6 +18,8 @@
 game\scripts\build.bat
 game\scripts\run.bat
 ```
+
+**Game (Linux):** see [docs/getting-started.md](docs/getting-started.md) — `game/scripts/build.sh` then `run.sh`.
 
 **Map editor:**
 

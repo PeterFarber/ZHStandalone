@@ -6,8 +6,6 @@
 #include "zh/game/types.hpp"
 
 #include <algorithm>
-#include <cmath>
-#include <cstdint>
 
 namespace zh::game {
 

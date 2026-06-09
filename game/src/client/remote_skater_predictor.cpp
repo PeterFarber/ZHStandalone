@@ -9,6 +9,55 @@
 #include <array>
 #include <cmath>
 
+namespace {
+
+void apply_keyboard_direct(float &vx,
+                           float &vy,
+                           bool &has_wp,
+                           float &face_x,
+                           float &face_y,
+                           std::uint8_t move_axes,
+                           float accel,
+                           float speed_cap,
+                           float dt) noexcept {
+    if (move_axes == 0U) {
+        return;
+    }
+    float dx = 0.f;
+    float dy = 0.f;
+    if ((move_axes & 1U) != 0U) {
+        dy -= 1.f;
+    }
+    if ((move_axes & 2U) != 0U) {
+        dy += 1.f;
+    }
+    if ((move_axes & 4U) != 0U) {
+        dx -= 1.f;
+    }
+    if ((move_axes & 8U) != 0U) {
+        dx += 1.f;
+    }
+    float const len = std::hypot(dx, dy);
+    if (len <= 1e-3f) {
+        return;
+    }
+    dx /= len;
+    dy /= len;
+    has_wp = false;
+    face_x = dx;
+    face_y = dy;
+    vx += dx * accel * dt;
+    vy += dy * accel * dt;
+    float const spd = std::hypot(vx, vy);
+    if (spd > speed_cap && spd > 1e-4f) {
+        float const s = speed_cap / spd;
+        vx *= s;
+        vy *= s;
+    }
+}
+
+}  // namespace
+
 namespace zh::client {
 
 void RemoteSkaterPredictor::reset() noexcept {
@@ -34,6 +83,7 @@ void RemoteSkaterPredictor::reset() noexcept {
     is_goalie_ = false;
     boost_tick_frac_accum_ = 0.f;
     snap_authority_tick_ = 0;
+    mouse_buttons_prev_ = 0;
 }
 
 void RemoteSkaterPredictor::authority_resync(std::uint8_t const slot,
@@ -130,6 +180,10 @@ void RemoteSkaterPredictor::run_hist_step(SentClientInputRecord const &r,
                                       zh::game::player_boost_charge_count(is_goalie_),
                                       boost_overspeed_ticks_, z_pulse,
                                       zh::game::kSkaterBoostImpulse);
+
+    apply_keyboard_direct(vx_, vy_, has_wp_, face_x_, face_y_, r.move_axes,
+                          zh::game::player_accel(is_goalie_),
+                          zh::game::player_max_speed(is_goalie_), fixed_dt_sec);
 
     zh::game::integrate_skater_motion(px_, py_, vx_, vy_, fixed_dt_sec,
                                       zh::game::player_draw_radius(is_goalie_));
@@ -255,6 +309,7 @@ void RemoteSkaterPredictor::advance(float frame_dt_sec,
                                    float mouse_x,
                                    float mouse_y,
                                    std::uint8_t mouse_buttons,
+                                   std::uint8_t move_axes,
                                    std::uint8_t ability_axes,
                                    std::uint8_t my_slot,
                                    PackedSnapshot const &snap_authority_latest) noexcept {
@@ -269,7 +324,8 @@ void RemoteSkaterPredictor::advance(float frame_dt_sec,
     }
     dt = std::min(dt, kPredDtClamp);
 
-    if (((mouse_buttons & zh::kClientMouseRmbClick) != 0U)) {
+    if (((mouse_buttons & zh::kClientMouseRmbHeld) != 0U) &&
+        ((mouse_buttons_prev_ & zh::kClientMouseRmbHeld) == 0U)) {
         float wx = mouse_x;
         float wy = mouse_y;
         zh::game::clamp_waypoint_to_rink(wx, wy);
@@ -282,6 +338,7 @@ void RemoteSkaterPredictor::advance(float frame_dt_sec,
                                                     slide_carry_speed_);
         slide_decel_ticks_ = 0U;
     }
+    mouse_buttons_prev_ = mouse_buttons;
 
     bool const z_pulse = ((ability_axes & zh::kClientAbilityZ) != 0U) &&
                          ((ability_prev_ & zh::kClientAbilityZ) == 0U);
@@ -316,6 +373,13 @@ void RemoteSkaterPredictor::advance(float frame_dt_sec,
                                       zh::game::player_boost_charge_count(is_goalie_),
                                       boost_overspeed_ticks_, z_pulse,
                                       zh::game::kSkaterBoostImpulse);
+
+    float const speed_cap =
+        (boost_overspeed_ticks_ > 0U)
+            ? (zh::game::player_max_speed(is_goalie_) + zh::game::kSkaterBoostOverspeed)
+            : zh::game::player_max_speed(is_goalie_);
+    apply_keyboard_direct(vx_, vy_, has_wp_, face_x_, face_y_, move_axes,
+                          zh::game::player_accel(is_goalie_), speed_cap, dt);
 
     zh::game::integrate_skater_motion(px_, py_, vx_, vy_, dt,
                                       zh::game::player_draw_radius(is_goalie_));

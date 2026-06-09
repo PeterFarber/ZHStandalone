@@ -2,7 +2,7 @@
 
 // Rectangle hit test helper for UI widgets.
 
-#include <raylib.h>
+#include "zh/gfx/gfx_compat.hpp"
 
 namespace zh::ui {
 

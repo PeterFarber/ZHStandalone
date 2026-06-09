@@ -38,6 +38,20 @@ void append_capsule_board_colliders_impl(std::vector<MapCollider> &colliders,
         .kind = MapColliderKind::Arc,
         .arc = MapArc3{MapPoint{cx_r, min_y}, MapPoint{max_x, cy}, MapPoint{cx_r, max_y}},
     });
+
+    // Quarter-circle junctions (capsule fillets between flat boards and end arcs).
+    auto corner_capsule = [&](float const cx, float const cy) {
+        colliders.push_back(MapCollider{
+            .kind = MapColliderKind::Circle,
+            .rect = RectF{cx, cy, 0.f, 0.f},
+            .radius = wall * 0.55f,
+            .tag = "board_corner_capsule",
+        });
+    };
+    corner_capsule(cx_l, min_y);
+    corner_capsule(cx_l, max_y);
+    corner_capsule(cx_r, min_y);
+    corner_capsule(cx_r, max_y);
 }
 
 }  // namespace
@@ -83,8 +97,7 @@ MapDefinition make_baked_default_map() noexcept {
                               (max_y - min_y) + wst + wsb};
 
     map.background = MapBackground{};
-    map.background->image = "background.png";
-    map.background->repeat = true;
+    map.background->color = "#e8f0f8";
     map.background->dest = map.camera_bounds;
 
     map.spawns.puck_start = MapPoint{cx, mid};
@@ -106,59 +119,6 @@ MapDefinition make_baked_default_map() noexcept {
         map.spawns.team_b.skaters[i] =
             MapPoint{max_x - spawn_inset - static_cast<float>(i) * 52.f, lane_y[i]};
     }
-
-    MapVisualPiece walls{};
-    walls.id = "wall_frame";
-    walls.kind = MapVisualKind::WallFrame;
-    walls.dest = map.camera_bounds;
-    walls.slice_l = 56.f;
-    walls.slice_t = 60.f;
-    walls.slice_r = 57.f;
-    walls.slice_b = 47.f;
-    map.visuals.push_back(walls);
-
-    MapVisualPiece center_circle{};
-    center_circle.id = "center_circle";
-    center_circle.kind = MapVisualKind::CircleMark;
-    center_circle.dest = RectF{cx - 88.f, mid - 88.f, 176.f, 176.f};
-    center_circle.use_src = true;
-    center_circle.src = RectF{162.f, 146.f, 928.f, 940.f};
-    map.visuals.push_back(center_circle);
-
-    float const goal_inset = (max_x - min_x) * 0.058f;
-    float const lg = min_x + goal_inset;
-    float const rg = max_x - goal_inset;
-    float const fo_x = (cx - lg) * 0.52f;
-    float const fo_y = (max_y - min_y) * 0.26f;
-    float const faceoff_x[4] = {lg + fo_x, lg + fo_x, rg - fo_x, rg - fo_x};
-    float const faceoff_y[4] = {mid - fo_y, mid + fo_y, mid - fo_y, mid + fo_y};
-    for (int i = 0; i < 4; ++i) {
-        MapVisualPiece fo{};
-        fo.id = "faceoff_" + std::to_string(i);
-        fo.kind = MapVisualKind::CircleMark;
-        fo.dest = RectF{faceoff_x[i] - 58.f, faceoff_y[i] - 58.f, 116.f, 116.f};
-        fo.use_src = true;
-        fo.src = RectF{162.f, 146.f, 928.f, 940.f};
-        map.visuals.push_back(fo);
-    }
-
-    float const gh = std::max(92.f * map.world_per_tex * 1.35f, 190.f);
-    float const gw = (878.f - 375.f) * map.world_per_tex * (gh / (1120.f * map.world_per_tex));
-
-    MapVisualPiece goal_w{};
-    goal_w.id = "goal_west";
-    goal_w.kind = MapVisualKind::GoalSprite;
-    goal_w.flip_x = true;
-    goal_w.dest = RectF{map.goal_west->rect.x + map.goal_west->rect.w - gw,
-                        map.goal_west->rect.y + (map.goal_west->rect.h - gh) * 0.5f, gw, gh};
-    map.visuals.push_back(goal_w);
-
-    MapVisualPiece goal_e{};
-    goal_e.id = "goal_east";
-    goal_e.kind = MapVisualKind::GoalSprite;
-    goal_e.dest = RectF{map.goal_east->rect.x, map.goal_east->rect.y + (map.goal_east->rect.h - gh) * 0.5f,
-                        gw, gh};
-    map.visuals.push_back(goal_e);
 
     append_capsule_board_colliders_impl(map.colliders, min_x, max_x, min_y, max_y, 20.f);
 

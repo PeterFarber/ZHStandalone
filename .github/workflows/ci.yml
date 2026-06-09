@@ -2,32 +2,47 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, 3d]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, 3d]
 
 jobs:
   linux-game:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install build deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libgl1-mesa-dev libx11-dev \
-            libxrandr-dev libxi-dev libxcursor-dev libxinerama-dev curl
-      - name: Install Premake 5
-        run: |
-          PREMAKE_VERSION=5.0.0-beta8
-          curl -fsSL \
-            "https://github.com/premake/premake-core/releases/download/v${PREMAKE_VERSION}/premake-${PREMAKE_VERSION}-linux.tar.gz" \
-            | tar xz
-          sudo install -m 755 premake5 /usr/local/bin/premake5
-          premake5 --version
-      - name: Build game
+          sudo apt-get install -y build-essential cmake ninja-build curl zip unzip tar pkg-config \
+            libvulkan-dev mesa-vulkan-drivers libx11-dev libxrandr-dev libxi-dev \
+            libxcursor-dev libxinerama-dev git
+
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: |
+            vcpkg/installed
+            vcpkg/packages
+            vcpkg/buildtrees
+            vcpkg/downloads
+            game/build/cmake-vk/vcpkg_installed
+          key: vcpkg-linux-${{ hashFiles('game/vcpkg.json') }}
+          restore-keys: vcpkg-linux-
+
+      - name: Build game (CMake + vcpkg + Vulkan)
+        env:
+          VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+          VCPKG_TARGET_TRIPLET: x64-linux
         run: |
           chmod +x game/scripts/*.sh
+          if [[ ! -x "$VCPKG_ROOT/vcpkg" ]]; then
+            git clone https://github.com/microsoft/vcpkg.git "$VCPKG_ROOT"
+            "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+          fi
           game/scripts/build.sh
+
       - name: Verify binary
         run: test -x game/bin/Release/zh_game
 
@@ -50,29 +65,29 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
+
+      - name: Cache vcpkg
+        uses: actions/cache@v4
         with:
-          msystem: MINGW64
-          update: true
-          install: mingw-w64-x86_64-toolchain make
-      - name: Build game
-        shell: msys2 {0}
-        run: |
-          set -euo pipefail
-          cd game/build
-          ./premake5.exe gmake
-          cd ..
-          mingw32-make config=release_x64 -j"$(nproc)"
-          mkdir -p bin/Release/resources bin/Release/maps
-          cp -a resources/. bin/Release/resources/
-          cp -a maps/. bin/Release/maps/
-          if objdump -p bin/Release/zh_game.exe | grep -Eiq 'libgcc_s_seh|libstdc\+\+-6|libwinpthread'; then
-            echo "error: zh_game.exe still depends on MinGW runtime DLLs" >&2
-            exit 1
-          fi
-      - name: Verify binary
+          path: |
+            vcpkg/installed
+            vcpkg/packages
+            vcpkg/buildtrees
+            vcpkg/downloads
+            game/build/cmake-vk/vcpkg_installed
+          key: vcpkg-windows-${{ hashFiles('game/vcpkg.json') }}
+          restore-keys: vcpkg-windows-
+
+      - name: Build game (CMake + vcpkg + Vulkan)
         shell: pwsh
+        env:
+          VCPKG_ROOT: ${{ github.workspace }}\vcpkg
         run: |
-          if (-not (Test-Path game/bin/Release/zh_game.exe)) {
-            throw "Missing game/bin/Release/zh_game.exe"
+          if (-not (Test-Path "$env:VCPKG_ROOT\vcpkg.exe")) {
+            git clone https://github.com/microsoft/vcpkg.git $env:VCPKG_ROOT
+            & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat" -disableMetrics
+          }
+          & game\scripts\build.bat
+          if (-not (Test-Path game\bin\Release\zh_game.exe)) {
+            throw "Missing game\bin\Release\zh_game.exe"
           }

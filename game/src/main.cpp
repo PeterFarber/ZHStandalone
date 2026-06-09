@@ -1,9 +1,7 @@
 // Entry point. Everything else lives behind zh::App so tests/tools could swap the impl later.
 #include "zh/app.hpp"
 
-#include <cstdlib>
-
-int main() {
+int main(int argc, char **argv) {
     zh::App app;
-    return app.run();
+    return app.run(argc, argv);
 }

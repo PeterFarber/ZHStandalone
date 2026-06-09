@@ -1,21 +1,20 @@
 #pragma once
 
-// Load/play MP3 cues from resources/sounds/ (Raylib audio).
+// Gameplay MP3 cues via miniaudio (resources/sounds/).
 
+#include "zh/audio/audio_engine.hpp"
 #include "zh/game/match_sound_events.hpp"
-
-#include <raylib.h>
 
 namespace zh::ui {
 
 struct GameSoundBank {
-    Sound zoom{};
-    Sound one_timer{};
-    Sound shield{};
-    Sound shot{};
-    Sound puck_collision{};
-    Sound puck_metal_collision{};
-    Sound faceoff_countdown{};
+    zh::audio::SoundHandle zoom{};
+    zh::audio::SoundHandle one_timer{};
+    zh::audio::SoundHandle shield{};
+    zh::audio::SoundHandle shot{};
+    zh::audio::SoundHandle puck_collision{};
+    zh::audio::SoundHandle puck_metal_collision{};
+    zh::audio::SoundHandle faceoff_countdown{};
     bool ready{false};
 };
 

@@ -2,8 +2,7 @@
 
 // Lobby roster side counts and per-team player/goalie caps.
 
-#include "zh/game/constants.hpp"
-#include "zh/protocol.hpp"
+#include <cstdint>
 
 namespace zh::game {
 

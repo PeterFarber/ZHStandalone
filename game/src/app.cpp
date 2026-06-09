@@ -1,4 +1,4 @@
-// Public face of the executable. Includes stay light — raylib/enet live in detail::AppContext.
+// Public face of the executable. Includes stay light — gfx/enet live in detail::AppContext.
 #include "zh/app.hpp"
 
 #include "detail/app_context.hpp"
@@ -13,8 +13,8 @@ App::App(App&&) noexcept = default;
 
 App& App::operator=(App&&) noexcept = default;
 
-int App::run() {
-    return impl_->run();
+int App::run(int argc, char **argv) {
+    return impl_->run(argc, argv);
 }
 
 }  // namespace zh

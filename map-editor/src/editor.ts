@@ -2687,8 +2687,7 @@ export class MapEditor {
         piece.use_src && piece.src
           ? piece.src
           : { x: 0, y: 0, w: img.width, h: img.height };
-      const tile = piece.kind === "ice_tile" && !!piece.use_src && !!piece.src;
-      this.drawTexturedRegion(ctx, img, src, r, !!piece.flip_x, tile);
+      this.drawTexturedRegion(ctx, img, src, r, !!piece.flip_x, false);
     } else {
       ctx.fillStyle = "#667085";
       ctx.fillRect(r.x, r.y, r.w, r.h);

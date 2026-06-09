@@ -19,10 +19,17 @@ poll_network → sim_fixed_step (60 Hz, capped catch-up) → render_frame
 | `app_wan_poll.cpp` | Client predictors + receive |
 | `host_listen_poll.cpp` | Host ENet → router |
 | `app_user_settings.cpp` | Load/save options JSON |
-| `app_playing_camera.cpp` | Zoom/follow cam |
-| `app_player_sprite_textures.cpp` | Team player PNGs |
-| `app_rink_texture.cpp` | Background / rink art |
+| `app_playing_camera.cpp` | Zoom/follow cam, F3 pick-debug overlay |
+| `app_playing_view.cpp` | Playing FX feed, world/HUD model assembly |
+| `app_rink_texture.cpp` | Playing-scene init (`PlayingScene3D::ensure_ready`) |
 
-Drawing: `src/ui/app_screen_draw.cpp`.
+Drawing:
+
+| File | What it draws |
+|------|----------------|
+| `src/ui/app_screen_draw.cpp` | Home, lobby, options, render test |
+| `src/ui/app_screen_draw_playing.cpp` | Playing screen (thin orchestration) |
+| `src/ui/playing_hud.cpp` | Match HUD, ability bar, shoot meter |
+| `src/ui/playing_scene_3d.cpp` | Rink, entities, 3D scene |
 
 Public onboarding: `docs/code-tour.md`.

@@ -2,15 +2,10 @@
 
 // Puck carry, pickup/steal hitboxes, shots, loose-puck rink bounce (host + client replay).
 
-#include "zh/game/rink_layout.hpp"
 #include "zh/game/types.hpp"
 #include "zh/game/constants.hpp"
-#include "zh/game/skater_physics.hpp"
-#include "zh/protocol.hpp"
 
-#include <cstddef>
 #include <cstdint>
-#include <cstdio>
 
 namespace zh::game {
 
@@ -110,19 +105,6 @@ void face_off_spawn_puck(float &px,
                          float &vy,
                          std::int8_t &carrier) noexcept;
 
-// After puck release — aim-based slap or in-reach steal blend (**legacy** single-click path).
-void apply_skater_puck_steal_or_shoot(float sk_x,
-                                      float sk_y,
-                                      float puck_x,
-                                      float puck_y,
-                                      float &vx,
-                                      float &vy,
-                                      float cursor_x,
-                                      float cursor_y,
-                                      float slap_strength,
-                                      float steal_damp,
-                                      float steal_nudge_pull) noexcept;
-
 [[nodiscard]] float shoot_charge_fraction(std::uint32_t charge_ticks) noexcept;
 
 [[nodiscard]] float shoot_aim_distance_factor(float sk_x, float sk_y, float cursor_x, float cursor_y) noexcept;
@@ -155,24 +137,5 @@ void apply_puck_strip_nudge(float puck_x,
                             float cursor_y,
                             float steal_damp,
                             float steal_nudge_pull) noexcept;
-
-inline void format_puck_carrier_line(char *buf, std::size_t buf_sz,
-                                     std::int8_t puck_carrier) noexcept {
-    if (buf_sz == 0U) {
-        return;
-    }
-    if (puck_carrier == kPuckCarrierFree) {
-        std::snprintf(buf, buf_sz,
-                      "Puck: loose — body or stick hitbox picks up; L tap stick→body to steal");
-    } else if (puck_carrier == kPuckCarrierHost) {
-        std::snprintf(buf, buf_sz, "Puck: HOST carry — hold L charge slap · tap L on enemy to steal");
-    } else if (puck_carrier >= 0 &&
-               static_cast<std::size_t>(puck_carrier) < kRemoteSlots) {
-        std::snprintf(buf, buf_sz, "Puck: slot %u carry — stick hitbox on you to steal",
-                      static_cast<unsigned>(puck_carrier));
-    } else {
-        std::snprintf(buf, buf_sz, "Puck possession: replicate error");
-    }
-}
 
 }  // namespace zh::game

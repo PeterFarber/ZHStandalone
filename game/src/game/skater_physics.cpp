@@ -7,7 +7,6 @@
 #include "zh/game/map_runtime.hpp"
 #include "zh/game/rink_layout.hpp"
 #include "zh/game/types.hpp"
-#include "zh/protocol.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -125,18 +124,10 @@ void resolve_circle_against_goal_frame_colliders(float &px,
                                                  float const radius,
                                                  float const bounce) noexcept {
     if (auto const &west = map_runtime().west_goal()) {
-        if (west->kind == MapZoneShapeKind::Rect) {
-            resolve_circle_rect_bounce(px, py, vx, vy, radius, west->rect, bounce);
-        } else {
-            resolve_circle_arc_bounce(px, py, vx, vy, radius, west->arc, bounce);
-        }
+        resolve_circle_against_goal_zone_enclosure(px, py, vx, vy, radius, bounce, *west, true);
     }
     if (auto const &east = map_runtime().east_goal()) {
-        if (east->kind == MapZoneShapeKind::Rect) {
-            resolve_circle_rect_bounce(px, py, vx, vy, radius, east->rect, bounce);
-        } else {
-            resolve_circle_arc_bounce(px, py, vx, vy, radius, east->arc, bounce);
-        }
+        resolve_circle_against_goal_zone_enclosure(px, py, vx, vy, radius, bounce, *east, false);
     }
 }
 
@@ -304,7 +295,7 @@ void tick_one_timer_window(std::uint32_t &window_rem_ticks) noexcept {
 }
 
 float one_timer_fraction(std::uint32_t const window_rem_ticks) noexcept {
-    if (kSkaterOneTimerDurationTicks == 0U) {
+    if constexpr (kSkaterOneTimerDurationTicks == 0U) {
         return 0.f;
     }
     return std::clamp(static_cast<float>(window_rem_ticks) /
@@ -329,7 +320,7 @@ void tick_goalie_shield_window(std::uint32_t &shield_rem_ticks) noexcept {
 }
 
 float goalie_shield_fraction(std::uint32_t const shield_rem_ticks) noexcept {
-    if (kGoalieShieldDurationTicks == 0U) {
+    if constexpr (kGoalieShieldDurationTicks == 0U) {
         return 0.f;
     }
     return std::clamp(static_cast<float>(shield_rem_ticks) /

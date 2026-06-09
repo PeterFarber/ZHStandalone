@@ -1,10 +1,10 @@
 #pragma once
 
-// Shared layout types (no Raylib).
+// Shared layout types (no gfx dependencies).
 
 namespace zh::game {
 
-// Axis-aligned rectangle in rink / UI layout space (no raylib dependency).
+// Axis-aligned rectangle in rink / UI layout space.
 struct RectF {
     float x{};
     float y{};

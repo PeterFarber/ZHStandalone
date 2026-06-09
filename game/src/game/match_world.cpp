@@ -384,8 +384,12 @@ HostMatchTickResult MatchWorld::tick_host_match(HostMatchTickInputs const &in,
     float const local_mx = in.local.mouse_x;
     float const local_my = in.local.mouse_y;
     std::uint8_t const hab = in.local.ability_axes;
+    bool const host_is_goalie = (match_host_goalie & 1U) != 0U;
 
-    if ((local_mouse_bits & kClientMouseRmbClick) != 0U) {
+    bool const local_rmb_pulse =
+        ((local_mouse_bits & kClientMouseRmbHeld) != 0U) &&
+        ((host_mouse_prev & kClientMouseRmbHeld) == 0U);
+    if (local_rmb_pulse) {
         float wx = local_mx;
         float wy = local_my;
         clamp_waypoint_to_rink(wx, wy);
@@ -394,7 +398,7 @@ HostMatchTickResult MatchWorld::tick_host_match(HostMatchTickInputs const &in,
         host_has_waypoint = true;
         set_facing_toward(host_sk_x, host_sk_y, wx, wy, host_facing_x, host_facing_y);
         apply_slide_carry_on_new_waypoint(host_sk_vx, host_sk_vy, host_facing_x, host_facing_y,
-                                          player_max_speed((match_host_goalie & 1U) != 0U),
+                                          player_max_speed(host_is_goalie),
                                           host_slide_carry_speed);
         host_slide_decel_ticks = 0U;
     }
@@ -435,7 +439,6 @@ HostMatchTickResult MatchWorld::tick_host_match(HostMatchTickInputs const &in,
         ((host_ability_prev & kClientAbilityCOneTimer) == 0U);
     try_activate_one_timer(host_one_timer_ticks, host_one_timer_cd_ticks, host_c_pulse);
 
-    bool const host_is_goalie = (match_host_goalie & 1U) != 0U;
     step_skater_velocity(host_sk_vx, host_sk_vy, host_sk_x, host_sk_y, host_way_x, host_way_y,
                          host_has_waypoint, host_facing_x, host_facing_y, player_accel(host_is_goalie),
                          player_max_speed(host_is_goalie), kSkaterFrictionCoast, kWaypointArrivalDistSq,
@@ -457,6 +460,45 @@ HostMatchTickResult MatchWorld::tick_host_match(HostMatchTickInputs const &in,
     if (host_boost_overspeed_ticks == kSkaterBoostOverspeedDurationTicks) {
         result.sounds.boost = true;
     }
+
+    if (in.local.move_axes != 0U) {
+        float dx = 0.f;
+        float dy = 0.f;
+        if ((in.local.move_axes & 1U) != 0U) {
+            dy -= 1.f;
+        }
+        if ((in.local.move_axes & 2U) != 0U) {
+            dy += 1.f;
+        }
+        if ((in.local.move_axes & 4U) != 0U) {
+            dx -= 1.f;
+        }
+        if ((in.local.move_axes & 8U) != 0U) {
+            dx += 1.f;
+        }
+        float const len = std::hypot(dx, dy);
+        if (len > 1e-3f) {
+            dx /= len;
+            dy /= len;
+            host_has_waypoint = false;
+            host_facing_x = dx;
+            host_facing_y = dy;
+            float const accel = player_accel(host_is_goalie);
+            host_sk_vx += dx * accel * dt;
+            host_sk_vy += dy * accel * dt;
+            float const speed_cap =
+                (host_boost_overspeed_ticks > 0U)
+                    ? (player_max_speed(host_is_goalie) + kSkaterBoostOverspeed)
+                    : player_max_speed(host_is_goalie);
+            float const spd = std::hypot(host_sk_vx, host_sk_vy);
+            if (spd > speed_cap && spd > 1e-4f) {
+                float const s = speed_cap / spd;
+                host_sk_vx *= s;
+                host_sk_vy *= s;
+            }
+        }
+    }
+
     integrate_skater_motion(host_sk_x, host_sk_y, host_sk_vx, host_sk_vy, dt,
                           player_draw_radius(host_is_goalie));
 

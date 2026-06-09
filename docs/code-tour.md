@@ -22,7 +22,15 @@ render_frame()
 
 ## UI screens
 
-All drawing: **`game/src/ui/app_screen_draw.cpp`** (search `draw_home`, `draw_playing`, …).
+Screen drawing is split by screen:
+
+| File | Screens |
+|------|---------|
+| **`game/src/ui/app_screen_draw.cpp`** | Home, lobby, options, render test |
+| **`game/src/ui/app_screen_draw_playing.cpp`** | Playing (camera → 3D scene → HUD) |
+| **`game/src/detail/app_playing_view.cpp`** | Builds playing world/HUD models from sim + net state |
+| **`game/src/ui/playing_hud.cpp`** | Match HUD layout and widgets |
+| **`game/src/ui/playing_scene_3d.cpp`** | Rink and entity draw |
 
 Screen enum: **`game/src/detail/app_context.hpp`** (`Screen::Home`, `Playing`, …).
 
@@ -51,7 +59,7 @@ Input sampling while playing: **`app_input_sampling.cpp`**.
 | `game/src/game/map_io.cpp` | Load/save map JSON |
 | `game/src/game/map_runtime.cpp` | Colliders, goals, spawns at runtime |
 
-No Raylib in `include/zh/game/` headers — keep domain code portable.
+No gfx headers in `include/zh/game/` — keep domain code portable.
 
 ## WAN client
 
@@ -71,6 +79,38 @@ Extend **`WanClientSession`** for new client-side net state instead of growing `
 
 Channel 0 = unreliable gameplay; channel 1 = reliable welcome/lobby.
 
+## Rendering (Vulkan + GLFW)
+
+| Path | Role |
+|------|------|
+| `game/include/zh/gfx/gfx.hpp` | Facade over the draw API |
+| `game/include/zh/gfx/gfx_compat.hpp` | Raylib-like names (`DrawText`, `BeginMode3D`, …) |
+| `game/src/gfx/vulkan/` | Vulkan device, swapchain, 2D/3D draw, fonts, textures |
+| `game/resources/shaders/vk/` | GLSL sources → SPIR-V at build time (CMake) |
+| `game/src/ui/map_shape_draw.cpp` | Map JSON → lit 3D playfield (ice, boards, shapes) |
+| `game/src/ui/playing_scene_3d.cpp` | Playing-world draw stack |
+| `game/src/ui/skater_fx.cpp` | Boost trail / slide spray particles |
+| `game/src/platform/` | GLFW window + input, Win32 paths |
+
+Playing uses a **3D camera** with sim coords on the ice plane (`zh/ui/world_space_3d.hpp`). Picking uses `playing_scene_pick.cpp`.
+
+## Audio
+
+| Path | Role |
+|------|------|
+| `game/include/zh/audio/audio_engine.hpp` | miniaudio wrapper |
+| `game/src/audio/audio_engine.cpp` | Engine init, file load/play |
+| `game/src/ui/game_sounds.cpp` | Gameplay MP3 cues |
+
+## Build
+
+| Script | OS |
+|--------|-----|
+| `game/scripts/build.bat` | Windows (CMake + VS + vcpkg) |
+| `game/scripts/build.sh` | Linux (CMake + Ninja + vcpkg) |
+
+Both write **`game/compile_commands.json`** for clangd. Local CMake output goes under **`game/build/`** (gitignored) — see `game/build/README.md`.
+
 ## Module rules (short)
 
 Allowed dependency direction:
@@ -79,7 +119,7 @@ Allowed dependency direction:
 protocol  →  game  →  client / net  →  detail / ui  →  app facade
 ```
 
-Lower layers must not `#include` UI or Raylib headers. **`MatchWorld` is only mutated on the host** during the fixed sim step.
+Lower layers must not `#include` UI or gfx draw headers. **`MatchWorld` is only mutated on the host** during the fixed sim step.
 
 ## Map editor (TypeScript)
 
@@ -95,7 +135,8 @@ Details: [map-editor.md](map-editor.md).
 
 | Goal | Start here |
 |------|------------|
-| New menu or HUD | `app_screen_draw.cpp` |
+| New menu or HUD | `app_screen_draw.cpp`, `playing_hud.cpp` |
+| Change 3D playfield / map draw | `map_shape_draw.cpp`, `playing_scene_3d.cpp` |
 | Change skater move | `skater_physics.cpp`, `match_world.cpp` |
 | Change puck / shots | `puck_physics.cpp` |
 | New net field | `protocol.hpp` + host router + client session |

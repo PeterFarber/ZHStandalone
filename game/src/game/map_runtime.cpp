@@ -5,7 +5,6 @@
 #include "zh/game/map_io.hpp"
 
 #include <algorithm>
-#include <cmath>
 
 namespace zh::game {
 

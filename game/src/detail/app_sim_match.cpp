@@ -2,11 +2,8 @@
 #include "detail/app_context.hpp"
 
 #include "zh/app.hpp"
-
-#include "zh/game/constants.hpp"
+#include "zh/gfx/gfx_compat.hpp"
 #include "zh/net/host/host_snapshot_broadcast.hpp"
-
-#include <raylib.h>
 
 namespace zh::detail {
 
@@ -16,9 +13,18 @@ void AppContext::sim_match(float /*dt*/) {
     // Order matters for determinism — bump protocol version if you reorder this.
     // delayed inputs → cooldowns → tick_host_match → ability edges → server_tick++ → snapshot
 
-    if (listen_server_ == nullptr || !listen_server_->valid() || !match_running_) {
+    if (!match_running_ || remote_client_) {
         return;
     }
+
+    if (listen_server_ == nullptr || !listen_server_->valid()) {
+        return;
+    }
+
+    host_render_prev_sk_x_ = world_.host_sk_x;
+    host_render_prev_sk_y_ = world_.host_sk_y;
+    host_render_prev_puck_x_ = world_.puck_x;
+    host_render_prev_puck_y_ = world_.puck_y;
 
     zh::net::host::HostPeerSlotTablesMut slots{
         slot_active_,       slot_peer_,         slot_last_seq_,     slot_move_,
@@ -34,8 +40,10 @@ void AppContext::sim_match(float /*dt*/) {
 
         world_.decrement_match_cooldowns();
 
-        LocalPlayingInputSample const local = sample_local_playing_input();
+        // Re-read keys/mouse every sim step (held keys + RMB edge in tick_host_match).
+        LocalPlayingInputSample const local = build_local_playing_input_fresh();
         HostMatchTickInputs tick_in{};
+        tick_in.local.move_axes = local.move_axes;
         tick_in.local.mouse_buttons = local.mouse_buttons;
         tick_in.local.ability_axes = local.ability_axes;
         tick_in.local.mouse_x = local.mouse_x;
@@ -54,9 +62,11 @@ void AppContext::sim_match(float /*dt*/) {
                                             slot_ability_);
     } else if (world_.phase == zh::game::MatchPhase::FaceoffCountdown) {
         // Face-off: only mouse clicks matter for early movement hints.
-        LocalPlayingInputSample const local = sample_local_playing_input();
+        LocalPlayingInputSample const local = build_local_playing_input_fresh();
         HostMatchTickInputs tick_in{};
         tick_in.local.mouse_buttons = local.mouse_buttons;
+        tick_in.local.mouse_x = local.mouse_x;
+        tick_in.local.mouse_y = local.mouse_y;
         tick_in.slot_mouse_buttons = slot_mouse_buttons_;
         (void)world_.tick_host_match(tick_in, App::kFixedDt, slot_active_, remote_mouse_seen_,
                                      static_cast<float>(GetScreenWidth()),

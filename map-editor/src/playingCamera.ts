@@ -12,7 +12,7 @@ export function clampViewFraction(frac: number): number {
   return Math.min(MAX_VIEW_FRAC, Math.max(MIN_VIEW_FRAC, frac));
 }
 
-/** Raylib Camera2D zoom for a view fraction of the play bounds. */
+/** Camera2D zoom for a view fraction of the play bounds. */
 export function zoomForViewFraction(viewFrac: number, play: Rect): number {
   if (play.w <= 0 || play.h <= 0) return 1;
   const f = clampViewFraction(viewFrac);

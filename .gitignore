@@ -4,7 +4,10 @@
 /w64devkit/
 /external/
 
-# Game — Premake + MinGW artifacts
+# vcpkg clone (CI uses ${{ github.workspace }}/vcpkg; local dev often ~/vcpkg)
+/vcpkg/
+
+# Game — build outputs
 /game/bin/
 /game/obj/
 /game/Makefile
@@ -23,19 +26,23 @@ compile_commands.json
 *.suo
 *.VC.db*
 
-# Fetched raylib + enet (large)
+# Fetched sources + CMake build trees (regenerate via scripts/fetch_externals.*)
 /game/build/external/
+/game/build/cmake-vk/
+/game/build/cmake-clangd/
+/game/build/cmake/
+/game/build/vcpkg_installed/
+/game/vcpkg_installed/
 
-# CMake experiments under game/build/
-/game/build/CMakeFiles/
-/game/build/CMakeCache.txt
-/game/build/cmake_install.cmake
+# Generated SPIR-V (built from resources/shaders/vk/*.vert|*.frag at compile time)
+/game/resources/shaders/vk/*.spv
+
+# Local build droppings under game/build/
 /game/build/*.sln
 /game/build/*.vcxproj*
 /game/build/x64/
 /game/build/Release/
 /game/build/Debug/
-/game/build/vcpkg_installed/
 /game/build/*.dir/
 /game/build/.cache/
 

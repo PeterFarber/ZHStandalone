@@ -22,6 +22,7 @@ constexpr std::int8_t kPuckCarrierHost = -2;  // host skater carries puck (not a
 constexpr std::uint8_t kClientMouseRmbClick = static_cast<std::uint8_t>(1U << 0U);
 constexpr std::uint8_t kClientMouseLmbClick = static_cast<std::uint8_t>(1U << 1U);
 constexpr std::uint8_t kClientMouseLmbHeld = kClientMouseLmbClick;
+constexpr std::uint8_t kClientMouseRmbHeld = static_cast<std::uint8_t>(1U << 2U);
 
 constexpr std::uint8_t kClientAbilityZ = static_cast<std::uint8_t>(1U << 0U);
 constexpr std::uint8_t kClientAbilityX = static_cast<std::uint8_t>(1U << 1U);

@@ -17,7 +17,7 @@ labels: bug
 **Environment**
 
 - OS:
-- Build: `game/scripts/build.bat` or `build.sh`
+      - Build: `game/scripts/build.bat` or `game/scripts/build.sh`
 - Commit or version:
 
 **Screenshots / logs**
