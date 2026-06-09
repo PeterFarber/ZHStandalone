@@ -182,7 +182,7 @@ void draw_ability_slot(Rectangle r,
     icon_fn(icon_area, icon_col);
 
     if (charges > 0) {
-        char charge_txt[8];
+        char charge_txt[16];
         std::snprintf(charge_txt, sizeof(charge_txt), "%d", charges);
         int const cw = MeasureText(charge_txt, kKeyFs);
         DrawText(charge_txt, static_cast<int>(r.x + r.width - static_cast<float>(cw) - 6.f),

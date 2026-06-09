@@ -26,27 +26,6 @@ inline float at(Mat4 const &m, int col, int row) noexcept {
     return m;
 }
 
-[[nodiscard]] Vector3 vec3_sub(Vector3 a, Vector3 b) noexcept {
-    return Vector3{a.x - b.x, a.y - b.y, a.z - b.z};
-}
-
-[[nodiscard]] Vector3 vec3_norm(Vector3 v) noexcept {
-    float const len = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-    if (len <= 1e-6f) {
-        return Vector3{0.f, 0.f, 0.f};
-    }
-    float const inv = 1.f / len;
-    return Vector3{v.x * inv, v.y * inv, v.z * inv};
-}
-
-[[nodiscard]] Vector3 vec3_cross(Vector3 a, Vector3 b) noexcept {
-    return Vector3{a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
-}
-
-[[nodiscard]] float vec3_dot(Vector3 a, Vector3 b) noexcept {
-    return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
 [[nodiscard]] glm::vec3 to_glm(Vector3 v) noexcept {
     return glm::vec3{v.x, v.y, v.z};
 }

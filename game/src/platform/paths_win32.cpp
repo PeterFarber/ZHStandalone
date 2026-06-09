@@ -28,7 +28,7 @@ char const *application_directory() noexcept {
         }
     }
 #else
-    path[0] = './';
+    path[0] = '/';
     path[1] = '\0';
 #endif
     return path;

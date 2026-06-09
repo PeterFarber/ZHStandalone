@@ -19,16 +19,32 @@ if not exist "%ROOT%\build\external\enet\include\enet\enet.h" (
   powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\fetch_externals.ps1"
 )
 
-set "VS_CMAKE=%ProgramFiles%\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
-set "VS_NINJA=%ProgramFiles%\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe"
-set "VS_VCVARS=%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-if not exist "%VS_CMAKE%" (
-  set "VS_CMAKE=%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
-  set "VS_NINJA=%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe"
-  set "VS_VCVARS=%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+set "VS_CMAKE="
+set "VS_NINJA="
+set "VS_VCVARS="
+for /f "usebackq delims=" %%I in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe 2^>nul`) do (
+  if not defined VS_CMAKE set "VS_CMAKE=%%I"
 )
-if not exist "%VS_VCVARS%" (
+for /f "usebackq delims=" %%I in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.Component.MSBuild -find Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe 2^>nul`) do (
+  if not defined VS_NINJA set "VS_NINJA=%%I"
+)
+for /f "usebackq delims=" %%I in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find VC\Auxiliary\Build\vcvars64.bat 2^>nul`) do (
+  if not defined VS_VCVARS set "VS_VCVARS=%%I"
+)
+if not defined VS_CMAKE (
+  where cmake >nul 2>&1
+  if not errorlevel 1 set "VS_CMAKE=cmake"
+)
+if not defined VS_VCVARS (
   echo [gen_compile_commands] error: Visual Studio vcvars64.bat not found
+  exit /b 1
+)
+if not defined VS_CMAKE (
+  echo [gen_compile_commands] error: cmake not found
+  exit /b 1
+)
+if not defined VS_NINJA (
+  echo [gen_compile_commands] error: ninja not found
   exit /b 1
 )
 call "%VS_VCVARS%" >nul

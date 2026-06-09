@@ -11,10 +11,6 @@
 
 namespace zh::gfx::vk {
 
-namespace {
-
-char const *kDeviceExtensions[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-
 [[nodiscard]] std::uint32_t find_device_local_memory_type(VkPhysicalDevice device,
                                                           std::uint32_t type_bits) {
     VkPhysicalDeviceMemoryProperties props{};
@@ -44,8 +40,6 @@ void create_image_view(VkDevice device, VkImage image, VkFormat format,
         throw std::runtime_error("vkCreateImageView failed");
     }
 }
-
-}  // namespace
 
 SwapchainSupport query_swapchain_support(VkPhysicalDevice device, VkSurfaceKHR surface) {
     SwapchainSupport details{};

@@ -101,6 +101,7 @@ jobs:
             & "$env:VCPKG_ROOT\bootstrap-vcpkg.bat" -disableMetrics
           }
           & game\scripts\build.bat
+          if ($LASTEXITCODE -ne 0) { throw "build.bat failed with exit code $LASTEXITCODE" }
           Copy-Item LICENSE game\bin\Release\LICENSE
           if (-not (Test-Path game\bin\Release\zh_game.exe)) {
             throw "Missing game\bin\Release\zh_game.exe"

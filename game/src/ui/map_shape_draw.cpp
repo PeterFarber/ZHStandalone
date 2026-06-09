@@ -896,6 +896,10 @@ void draw_playfield_build_step_3d(MapDefinition const &map, PlayfieldBuildStep c
             draw_map_rink_strokes_3d(map);
             break;
         case PlayfieldBuildStep::PlayerProxy:
+        case PlayfieldBuildStep::Puck:
+        case PlayfieldBuildStep::OpponentSkater:
+        case PlayfieldBuildStep::GameplayFx:
+        case PlayfieldBuildStep::FullPlayingPath:
         case PlayfieldBuildStep::Count:
             break;
     }
